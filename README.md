@@ -2,7 +2,7 @@
 
 Hi — this is my app factory. It's a repo of agent skills for building small consumer mobile apps, and it's also a course in *why* those apps are built the way they are. And yes — this README is written by an agent, but I can assure you it has been iterated on by me multiple times to make sure my personal, genuine process is properly articulated. Feel free to reach out with any questions, or [buy me a coffee](https://buymeacoffee.com/meliwat).
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-%E2%98%95-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/meliwat)
+<a href="https://buymeacoffee.com/meliwat" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
 
 If you're here to build: the skills (coming next) will walk an agent through every stage of producing an app, from brief to App Store. If you're here to learn: every skill explains its own reasoning, so by reading them you pick up the judgment to change them — or to rebuild this whole thing from an empty folder if you had to. That's the bar I write everything here to.
 
