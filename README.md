@@ -34,19 +34,6 @@ That's the story. Everything below is just the practical detail of making it wor
 
 Worth being precise, because it's the fact everything hangs on. Capacitor copies your `www/` folder verbatim into native iOS/Android projects and loads it in a platform WebView, alongside a native runtime, a JS-to-native bridge, and plugins. It does *not* bundle a web application server — anything that needs a server at runtime has nowhere to execute on the device. So the app must be a self-contained static web bundle, and with vanilla files it already is: the folder you previewed is byte-for-byte the folder that ships.
 
-### The plugin convention — how native APIs meet no-build JS
-
-Plugins (haptics, notifications, health, payments…) are what make this a real app rather than a website in a box, and they're the one place the no-build approach needs a deliberate convention.
-
-The wrinkle: Capacitor plugin JS APIs ship as npm ESM packages. A browser can't resolve a bare import like `@capacitor/haptics`, and `cap sync` won't help — it copies your already-prepared web assets into the native projects and wires up native dependencies; it does not convert npm ESM packages into browser-ready bundles. So:
-
-- **Browser-ready plugin bundles get checked into a `vendor/` folder** and loaded as plain `<script>` tags, exactly like the rest of the app.
-- **The native side is installed via npm + `cap sync`** as usual.
-- **Every supported plugin gets validated against this convention** before a skill may use it.
-- **Every plugin gets a browser fallback** — a no-op or mock when the native bridge is absent — so the app still previews in a plain browser without errors.
-
-That's how the reference production app works. One checked-in vendor file per plugin, and native capability never breaks the preview loop.
-
 ### App backend: none by default
 
 Realistically, most utility-based consumer apps don't need a backend. Data persists on the device, local notifications fire on-device, and payments and entitlements go through RevenueCat. Managed services still provide remote infrastructure — RevenueCat's servers validate purchases, the app stores handle distribution, and *push* notifications (unlike local ones) require remote delivery infrastructure — but none of that is a backend you operate. Defaulting to "none" means one less service to pay for, secure, operate, and keep available.
