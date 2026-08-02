@@ -12,7 +12,7 @@ If you're here to build: the skills (coming next) will walk an agent through eve
 
 Here's the whole idea, in four steps:
 
-**1. Coding agents are really good at web stuff.** HTML, CSS, and JavaScript is where they do their best UI work — it's the material they handle most fluently. If your factory's workers are agents, you build with the material they're best at.
+**1. Coding agents are really good at web stuff.** HTML, CSS, and JavaScript is where they do their best UI work — it's the material they handle most fluently. If your workers are agents, you build with the material they're best at.
 
 **2. You watch the app take shape, live.** Claude and Codex can show you a live web preview while they build. You literally see the app's UI coming together in front of you — no phone, no install, no waiting on a native build to find out what a change looks like.
 
@@ -24,9 +24,7 @@ That's the story. Everything below is just the practical detail of making it wor
 
 | Layer | Choice | Why |
 |---|---|---|
-| UI | Vanilla HTML + CSS | Renders right in your Claude or Codex preview, or any browser — no downloading to your phone, because the Capacitor wrapper ports exactly this onto the app. What you see is what ships. |
-| Logic | Vanilla JavaScript | The code that runs is the code you wrote — nothing compiles, nothing translates. |
-| Web build | Copy only | There's no web compilation step — "building" means copying static files into `www/` and running `npx cap sync`. (The native projects still compile and sign the final store binaries via Xcode / Android Studio / `cap build`.) |
+| App code | Vanilla HTML + CSS + JavaScript | Renders right in your Claude or Codex preview, or any browser — no downloading to your phone, because the Capacitor wrapper ports exactly this onto the app. What you see is what ships. |
 | Native shell | Capacitor 8 | Native distribution, a JS-native bridge, and plugins — haptics, notifications, health, in-app review, payments via RevenueCat — around one web codebase. |
 | App backend | None by default | Realistically, most utility-based consumer apps don't need a backend at all. When one is genuinely needed (accounts, shared data, server-side secrets), Supabase is the ideal choice — a Supabase skill is planned. |
 
@@ -36,7 +34,7 @@ This isn't a guess — it's how a real production app of mine already works. And
 
 Vanilla is what makes "the preview IS the app" literally true. Open `index.html` in a browser and you're looking at the actual product — no dev server, no compile step, nothing between what got written and what ships. When something looks wrong, the file you read is the file that ran.
 
-Frameworks and bundlers earn their keep in large codebases — component reuse across big teams, type-checked contracts, optimized dependency graphs. But the price is a build step and a gap between source and shipped artifact, and at the scope of the small, local-first apps this factory targets, that price isn't repaid. A handful of screens scales fine in vanilla. There is no build step to lie to you.
+Frameworks and bundlers earn their keep in large codebases — component reuse across big teams, type-checked contracts, optimized dependency graphs. But the price is a build step and a gap between source and shipped artifact, and at the scope of the small, local-first apps this OS targets, that price isn't repaid. A handful of screens scales fine in vanilla. There is no build step to lie to you.
 
 Staying previewable takes a little discipline: code is written as classic `<script>` tags, not bare ESM imports that need a resolver, and APIs that don't work from `file://` are avoided — when one is unavoidable, a trivial static file server (`python3 -m http.server`) covers it. Still zero build.
 
@@ -73,7 +71,7 @@ The browser loop is the default fast loop: open the file, edit, refresh. But the
 
 ---
 
-## How the factory works
+## How the OS works
 
 A **skill** is a documented, reusable instruction module: an agent invokes it to perform one stage of app production the same way every time, and a reader studies it to learn why that stage works the way it does.
 
@@ -93,13 +91,3 @@ Two modes, and both are the point:
 - **Learn from it.** Read the skills. Each one explains its reasoning, so you come away understanding *why* the pattern exists — which is what you need to change a skill with judgment instead of superstition.
 
 New here? Read this README fully before anything else. The skills will make much more sense once the "static folder in a WebView" model is in your head.
-
----
-
-## Design principles
-
-**Every skill documents its why.** A rule without its reasoning can only be followed or broken — never intelligently adapted. When you want to change a skill, its stated reasoning tells you whether your change honors the constraint or violates it.
-
-**Simplicity over feature count.** Fewer tools means fewer ways to accidentally reach for something that can't exist on a phone. Every addition to the stack is a new surface where source and shipped artifact can drift apart. The stack stays small on purpose.
-
-**The repo should survive its own deletion.** The real artifact here isn't the files — it's the understanding they build in you. If you've genuinely absorbed the reasoning, you could rebuild the factory from an empty directory. That's the bar everything is written to.
