@@ -69,6 +69,15 @@ When an app genuinely needs accounts, shared data between users, or server-side 
 
 The browser loop is the default fast loop: open the file, edit, refresh. But the browser can't validate everything — WebView behavior, safe areas, on-screen keyboards, permissions, deep links, and app lifecycle only exist on a device. So simulator/device checks begin with the first vertical slice of an app and recur whenever native integration, storage, auth callbacks, or platform behavior changes. Fast loop by default, native validation at every point where the platforms can diverge — not "native at the very end."
 
+### Getting it on your phone
+
+Honest downside vs React Native + Expo: there's no `expo run` here — putting a build on a device means a real native build. But agents close most of that gap. The route that works best is **TestFlight, automated**: your agent can build, sign, and upload to TestFlight through the App Store Connect API at the end of each iteration, so a fresh build is just waiting on your phone without you touching Xcode. Done manually, that loop would be annoying; done by the agent, it's a non-issue.
+
+Two practical notes:
+
+- **Keep yourself in a private internal group.** If you have beta testers, frequent iteration builds will spam them with update notifications — put yourself (and only yourself) in an internal group and promote builds to testers deliberately.
+- **Cable + Xcode still works** when TestFlight is acting up or you want the fastest possible device check: plug the phone in, `npx cap sync ios`, hit Run.
+
 ---
 
 ## How the OS works
