@@ -32,13 +32,11 @@ That's the story. Everything below is just the practical detail of making it wor
 
 This isn't a guess — it's how a real production app of mine already works. And the four-step story above is the test to apply whenever you're tempted to swap something out: does the change keep the preview and the product identical?
 
-### Why vanilla — no React, no Vite, no build step
+### Why vanilla
 
 Vanilla is what makes "the preview IS the app" literally true. Open `index.html` in a browser and you're looking at the actual product — no dev server, no compile step, nothing between what got written and what ships. When something looks wrong, the file you read is the file that ran.
 
 Frameworks and bundlers earn their keep in large codebases — component reuse across big teams, type-checked contracts, optimized dependency graphs. But the price is a build step and a gap between source and shipped artifact, and at the scope of the small, local-first apps this factory targets, that price isn't repaid. A handful of screens scales fine in vanilla. There is no build step to lie to you.
-
-(Next.js specifically: its headline features — request-time SSR, Server Actions, dynamic API/Route Handlers — require a server at runtime, and there's no server inside a phone. You'd be adopting a framework specifically to avoid its main feature set.)
 
 Staying previewable takes a little discipline: code is written as classic `<script>` tags, not bare ESM imports that need a resolver, and APIs that don't work from `file://` are avoided — when one is unavoidable, a trivial static file server (`python3 -m http.server`) covers it. Still zero build.
 
