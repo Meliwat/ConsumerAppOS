@@ -68,9 +68,17 @@ Target: `.p8` → `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8`; IDs → 
 
 ## Phase D — Verify (evidence, then the claim)
 
-Precondition: `python3 -c "import jwt, cryptography"` — if it fails, `python3 -m pip install --user pyjwt cryptography` (ES256 is not in the stdlib).
+The verification contract — what must be true, regardless of tooling:
 
-Write `verify_asc.py` in a scratch directory (NOT the repo):
+- A JWT signed with the stored `.p8` (ES256, `kid` = Key ID, `iss` = Issuer ID, `aud` = `appstoreconnect-v1`) is accepted by `GET https://api.appstoreconnect.apple.com/v1/bundleIds` on Apple's production API.
+- The user is shown Apple's real response. Zero bundle IDs on a fresh account is still a pass — acceptance of the token is the test.
+- Failures are diagnosed, not shrugged at: 401 = credential/clock, 403 = role/access, and any failure exits non-zero.
+
+The reference implementation below satisfies the contract. Machines vary — `python3` provenance, pip policies (externally-managed environments), sandboxing — so adapt freely: fix the environment, use a different runtime, or any tool that satisfies the contract. What is NOT negotiable: the call hits Apple's production API with a token from the stored credentials, the real response is shown, and the `.p8` contents never appear in output or transcript.
+
+Reference precondition: `python3 -c "import jwt, cryptography"` — if it fails, `python3 -m pip install --user pyjwt cryptography` (ES256 is not in the stdlib).
+
+Reference script, `verify_asc.py`, in a scratch directory (NOT the repo):
 
 ```python
 import json, sys, time, urllib.request
