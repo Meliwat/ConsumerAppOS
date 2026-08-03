@@ -1,0 +1,23 @@
+/* ============ creator-codes — screen styles ============
+   Loaded after style.css (and shell.css when present); consumes the same
+   :root tokens. New values live in this token block — no raw colors are
+   allowed below it. */
+:root {
+  --code-input-h: 56px;
+  --fs-code: 18px; /* inputs must be >= 16px (iOS focus-zoom rule) */
+}
+
+.code-input {
+  width: 100%; max-width: 320px;
+  min-height: var(--code-input-h);
+  border: 2px solid var(--sel-bg); border-radius: var(--radius);
+  background: var(--card); color: var(--ink);
+  font-size: var(--fs-code); font-weight: 700; text-align: center;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0 18px; box-shadow: var(--shadow);
+}
+.code-input:focus { border-color: var(--sel-border); }
+.code-input::placeholder { color: var(--muted); font-weight: 600; letter-spacing: 0.08em; }
+
+.code-status { color: var(--muted); font-size: 14px; min-height: 20px; }
+.code-status.ok { color: var(--accent); font-weight: 650; }

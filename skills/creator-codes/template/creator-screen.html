@@ -1,0 +1,23 @@
+        <!-- 3c · creator code (creator-codes skill) — optional and
+             skippable; NEVER blocks on a network call. Entered codes are
+             persisted immediately (validated live when the code list is
+             loaded, otherwise saved as pending and re-checked next
+             launch). Both buttons advance via app.js's creator-next
+             action; creator.js persists in the capture phase first. -->
+        <section class="screen" data-screen="creator">
+          <div class="screen-body center">
+            <svg class="icon hero-icon" aria-hidden="true"><use href="#i-{{CREATOR_ICON}}"/></svg>
+            <h2 tabindex="-1">{{CREATOR_HEADLINE}}</h2>
+            <p class="promise">{{CREATOR_BODY}}</p>
+            <input id="creator-input" class="code-input" type="text" inputmode="text"
+                   autocomplete="off" autocapitalize="characters" autocorrect="off"
+                   spellcheck="false" maxlength="24" pattern="[A-Za-z0-9_-]{2,24}"
+                   placeholder="{{CREATOR_PLACEHOLDER}}"
+                   aria-label="Creator code" />
+            <p class="code-status" id="creator-status" role="status" aria-live="polite"></p>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="creator-next" data-creator="apply">Continue</button>
+            <button class="btn ghost" data-action="creator-next" data-creator="skip">Skip</button>
+          </div>
+        </section>
