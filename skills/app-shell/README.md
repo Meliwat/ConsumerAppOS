@@ -1,0 +1,19 @@
+# app-shell — why it works this way
+
+Onboarding ends somewhere. This skill is the somewhere: the main shell of the app — a four-tab home screen that the onboarding flow's final CTA lands in. It deliberately ships structure and nothing else: a tab bar, four scrollable screens with big iOS-style titles, and clearly-labeled placeholder content that says, in effect, "this is where your app goes." Every real feature gets built on top of this later, by other skills or by you and your agent. One-size-fits-all skeleton, per-app content — same deal as onboarding.
+
+## The tab bar is the real one
+
+Here's the part I care about most, and it's a departure from how the rest of this OS works: on your phone, the tab bar is not web. It's native — hosted by a Capacitor plugin ([@capgo/capacitor-native-navigation](https://github.com/Cap-go/capacitor-native-navigation), pinned to the exact version I audited). On iOS 26 and newer that means the literal system `UITabBar` inside a `UITabBarController`, so iOS draws its own Liquid Glass — not a reproduction of the glass, the glass. Apple's blur, Apple's physics, SF Symbols for the icons. On iOS 15 through 25 there's no Liquid Glass to borrow, so the plugin draws its own floating tab bar in native UIKit — still native code and native materials, just not Apple's component. Either way the WebView stays the entire content of the app, and the split is clean: the native side owns the bar's chrome, hosting the WebView, telling the page how much bottom inset to leave, and reporting "the user picked this tab"; the web side owns everything that selection means — the panes, their state, their scroll positions.
+
+The browser preview can't show you a UITabBar, so it gets a stand-in: a floating glass capsule built with `backdrop-filter`, sampling the content that scrolls beneath it — a real blur, not a painted-on tint, and honestly quite close. But close is all it is, and that's fine, because this is the one place in the whole OS where the preview is allowed to differ from the device. Everywhere else the rule is "what you see is what you ship." Here the rule is: the preview lies to you, on purpose, in your favor — the phone gets the real thing.
+
+This is also the plugin convention taken to its logical end. The convention says: native capability installed by npm and `cap sync`, JS driven through a small vendored file, browser fallback always present so the preview never breaks. Haptics was the gentle version — the fallback is a no-op you'd never notice. The tab bar is the ultimate version: the fallback is a whole visible component. Same shape, bigger stakes.
+
+## Why tabs cut instead of push
+
+Screens inside the onboarding flow slide — they're a sequence, and the push tells you where you are in it. Tabs are not a sequence; they're places. Apple's own apps overwhelmingly cut between tabs rather than animate, and we follow that: switching tabs is an instant cut, and each tab remembers its own scroll position, so going away and coming back feels like turning your head, not traveling. The four screens each scroll in their own inner region (the page itself never scrolls — that's the native-feel rule this whole OS follows), and the content visibly slides under the glass bar, which is what makes the glass worth having.
+
+## What's actually in the four screens
+
+Almost nothing, proudly. A large title, the plan card carried over from onboarding on the first tab, and placeholder cards that say they're placeholders. The tab names and icons are content slots — Home, Progress, Explore, Settings by default, with an SF Symbol for the device and a matching sprite icon for the preview — but the screens themselves are blank stages. Blank on purpose: every app that comes out of this OS needs a shell, and no two apps need the same features, so the shell is the last thing that can be one-size-fits-all. This is where the factory line ends and your app begins.

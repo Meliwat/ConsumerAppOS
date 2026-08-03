@@ -1,0 +1,120 @@
+        <!-- 7 · home → main app shell (app-shell skill).
+             Outer section keeps data-screen="home" so onboarding's show("home")
+             lands here unchanged. Inside: four tab panes + the web fallback
+             tab bar. On device a REAL native tab bar replaces the web bar:
+             the system UITabBar on iOS 26+, the plugin's native UIKit floating
+             bar on iOS 15–25 (sanctioned preview difference — see
+             app-shell/README.md). -->
+        <section class="screen shell" data-screen="home">
+          <!-- supplemental sprite symbols: app-shell's additions to the icon library -->
+          <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+            <defs>
+              <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.3V20h13V9.3"/><path d="M10 20v-6h4v6"/></symbol>
+              <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z"/></symbol>
+              <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></symbol>
+              <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+            </defs>
+          </svg>
+
+          <!-- WEB FALLBACK tab bar (browser preview only). On device the native
+               tab bar takes over and shell.js hides this via html.native-tabs
+               (only once a visible native update has actually succeeded).
+               Liquid-glass look: real backdrop-filter sampling the pane content
+               scrolling underneath — not a static tint. -->
+          <nav class="tabbar" role="tablist" aria-label="Main">
+            <button class="tab active" id="tabbtn-tab1" role="tab" aria-selected="true" tabindex="0" aria-controls="pane-tab1" data-tab="tab1" data-sf="{{TAB1_SF}}">
+              <svg class="icon tab-icon" aria-hidden="true"><use href="#i-{{TAB1_ICON}}"/></svg>
+              <span class="tab-label">{{TAB1_TITLE}}</span>
+            </button>
+            <button class="tab" id="tabbtn-tab2" role="tab" aria-selected="false" tabindex="-1" aria-controls="pane-tab2" data-tab="tab2" data-sf="{{TAB2_SF}}">
+              <svg class="icon tab-icon" aria-hidden="true"><use href="#i-{{TAB2_ICON}}"/></svg>
+              <span class="tab-label">{{TAB2_TITLE}}</span>
+            </button>
+            <button class="tab" id="tabbtn-tab3" role="tab" aria-selected="false" tabindex="-1" aria-controls="pane-tab3" data-tab="tab3" data-sf="{{TAB3_SF}}">
+              <svg class="icon tab-icon" aria-hidden="true"><use href="#i-{{TAB3_ICON}}"/></svg>
+              <span class="tab-label">{{TAB3_TITLE}}</span>
+            </button>
+            <button class="tab" id="tabbtn-tab4" role="tab" aria-selected="false" tabindex="-1" aria-controls="pane-tab4" data-tab="tab4" data-sf="{{TAB4_SF}}">
+              <svg class="icon tab-icon" aria-hidden="true"><use href="#i-{{TAB4_ICON}}"/></svg>
+              <span class="tab-label">{{TAB4_TITLE}}</span>
+            </button>
+          </nav>
+
+          <div class="tab-panes">
+            <div class="tab-pane active" id="pane-tab1" data-tab="tab1" role="tabpanel" aria-labelledby="tabbtn-tab1" tabindex="0">
+              <div class="pane-scroll">
+                <h1 class="large-title" tabindex="-1">{{TAB1_TITLE}}</h1>
+                <div class="card plan-card">
+                  <div class="plan-row"><span class="plan-label">Your {{PLAN_NOUN}}</span><span class="plan-value" data-plan="a1"></span></div>
+                  <div class="plan-row"><span class="plan-label">Focus</span><span class="plan-value" data-plan="a2"></span></div>
+                </div>
+                <p class="empty-state">{{EMPTY_STATE_LINE}}</p>
+                <div class="card yours-card">
+                  <p class="yours-title">This screen is yours</p>
+                  <p class="yours-body">Placeholder content — replaced by later skills or your agent as the app grows.</p>
+                </div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w90"></span><span class="ghost-line w70"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w80"></span><span class="ghost-line w50"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w90"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w70"></span><span class="ghost-line w80"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w90"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w80"></span><span class="ghost-line w70"></span></div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="pane-tab2" data-tab="tab2" role="tabpanel" aria-labelledby="tabbtn-tab2" tabindex="0">
+              <div class="pane-scroll">
+                <h1 class="large-title" tabindex="-1">{{TAB2_TITLE}}</h1>
+                <div class="card yours-card">
+                  <p class="yours-title">This screen is yours</p>
+                  <p class="yours-body">Placeholder content — replaced by later skills or your agent as the app grows.</p>
+                </div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w90"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w80"></span><span class="ghost-line w70"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w70"></span><span class="ghost-line w90"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w90"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w60"></span><span class="ghost-line w80"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w70"></span><span class="ghost-line w90"></span><span class="ghost-line w50"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w80"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w70"></span><span class="ghost-line w90"></span></div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="pane-tab3" data-tab="tab3" role="tabpanel" aria-labelledby="tabbtn-tab3" tabindex="0">
+              <div class="pane-scroll">
+                <h1 class="large-title" tabindex="-1">{{TAB3_TITLE}}</h1>
+                <div class="card yours-card">
+                  <p class="yours-title">This screen is yours</p>
+                  <p class="yours-body">Placeholder content — replaced by later skills or your agent as the app grows.</p>
+                </div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w90"></span><span class="ghost-line w50"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w70"></span><span class="ghost-line w80"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w80"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w70"></span><span class="ghost-line w90"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w80"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w70"></span><span class="ghost-line w90"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w90"></span><span class="ghost-line w70"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w60"></span><span class="ghost-line w80"></span></div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="pane-tab4" data-tab="tab4" role="tabpanel" aria-labelledby="tabbtn-tab4" tabindex="0">
+              <div class="pane-scroll">
+                <h1 class="large-title" tabindex="-1">{{TAB4_TITLE}}</h1>
+                <div class="card yours-card">
+                  <p class="yours-title">This screen is yours</p>
+                  <p class="yours-body">Placeholder content — replaced by later skills or your agent as the app grows.</p>
+                </div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w80"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w90"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w70"></span><span class="ghost-line w80"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w70"></span><span class="ghost-line w80"></span><span class="ghost-line w50"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w90"></span><span class="ghost-line w60"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w60"></span><span class="ghost-line w70"></span><span class="ghost-line w40"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w40"></span><span class="ghost-line w90"></span><span class="ghost-line w80"></span></div>
+                <div class="card ghost-card" aria-hidden="true"><span class="ghost-line w50"></span><span class="ghost-line w60"></span><span class="ghost-line w90"></span></div>
+              </div>
+            </div>
+          </div>
+
+        </section>

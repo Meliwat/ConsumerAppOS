@@ -1,0 +1,118 @@
+/* ============ app-shell — tab shell styles ============
+   Loaded after style.css; consumes the same :root tokens. All new colors
+   live in this token block — no raw colors are allowed below it.
+   Contrast contract additions (verify when theming): --tab-active >= 3:1 on
+   --glass-tint composited over --bg (active tab is a state indicator);
+   --tab-inactive follows --muted. */
+:root {
+  --tabbar-h: 64px;
+  --tabbar-inset-x: 16px;
+  --tabbar-gap-bottom: 12px;
+  --glass-tint: rgba(255, 255, 255, 0.55);
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --glass-inner: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 28px rgba(20, 24, 40, 0.18);
+  --tab-active: var(--accent);
+  --tab-inactive: var(--muted);
+  --fs-large-title: 34px;
+  --fs-tab-label: 10px;
+}
+
+/* ============ shell screen ============
+   The shell replaces onboarding's home stub INSIDE the same .screen lifecycle:
+   onboarding pushes into it; from then on navigation is tabs only. */
+.screen.shell { overflow: hidden; }
+
+.tab-panes { position: relative; flex: 1 1 auto; min-height: 0; }
+
+/* Tab switching is an INSTANT CUT (iOS convention — tabs never push).
+   visibility (not display) so each pane's scroller keeps its scroll offset
+   while hidden; visibility also drops hidden panes from the a11y tree. */
+.tab-pane { position: absolute; inset: 0; visibility: hidden; }
+.tab-pane.active { visibility: visible; }
+
+/* Inner scroller (native-feel rule): the pane scrolls, the page never does.
+   Bottom padding clears the floating bar so the last card is reachable —
+   content itself passes UNDER the glass while scrolling. */
+.pane-scroll {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 8px var(--pad-x)
+           calc(var(--tabbar-h) + var(--tabbar-gap-bottom) + 24px + var(--safe-bottom));
+}
+.pane-scroll::-webkit-scrollbar { display: none; }
+
+/* Native mode: the plugin writes --cap-native-tabbar-height on <html>
+   (contentInsetMode "css"); inset for the REAL bar instead of the web one. */
+html.native-tabs .pane-scroll {
+  padding-bottom: calc(var(--cap-native-tabbar-height, 84px) + 24px);
+}
+
+.large-title {
+  font-size: var(--fs-large-title); font-weight: 800;
+  letter-spacing: 0.2px; padding-top: 6px;
+}
+
+/* ============ web fallback tab bar (liquid glass) ============
+   BROWSER PREVIEW ONLY — on device the native tab bar replaces it
+   (html.native-tabs hides it). Floating inset capsule; backdrop-filter
+   genuinely samples the content scrolling underneath.
+   Safe-area ownership: #screen already pads --safe-left/right for every
+   screen, and this bar lives inside that padded box — so ONLY the design
+   inset applies here. Adding --safe-left/right again would double the
+   side insets. --safe-bottom is NOT applied by #screen, so it is owned
+   here. */
+.tabbar {
+  position: absolute;
+  left: var(--tabbar-inset-x);
+  right: var(--tabbar-inset-x);
+  bottom: calc(var(--tabbar-gap-bottom) + var(--safe-bottom));
+  height: var(--tabbar-h);
+  display: flex; align-items: stretch;
+  border-radius: calc(var(--tabbar-h) / 2);
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(22px) saturate(1.9);
+  backdrop-filter: blur(22px) saturate(1.9);
+  border: 0.5px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inner);
+  z-index: 10;
+}
+html.native-tabs .tabbar { display: none; }
+
+.tabbar .tab {
+  flex: 1 1 0; min-width: 44px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border: 0; background: transparent; cursor: pointer;
+  border-radius: inherit;
+  color: var(--tab-inactive);
+  /* press physics: same family as .btn — GPU transform, active-only */
+  transition: transform 90ms ease-out;
+}
+.tabbar .tab:active { transform: scale(0.94); }
+.tabbar .tab.active { color: var(--tab-active); }
+.tab-icon { width: 26px; height: 26px; stroke-width: 1.9; }
+.tab-label { font-size: var(--fs-tab-label); font-weight: 650; letter-spacing: 0.01em; }
+
+/* ============ placeholder content ============ */
+.yours-card { border: 1.5px dashed var(--sel-border); box-shadow: none; text-align: center; }
+.yours-title { font-weight: 700; }
+.yours-body { color: var(--muted); font-size: 14px; line-height: 1.45; margin-top: 4px; }
+
+.ghost-card { display: flex; flex-direction: column; gap: 10px; }
+.ghost-line { height: 12px; border-radius: 6px; background: var(--sel-bg); }
+.ghost-line.w40 { width: 40%; }
+.ghost-line.w50 { width: 50%; }
+.ghost-line.w60 { width: 60%; }
+.ghost-line.w70 { width: 70%; }
+.ghost-line.w80 { width: 80%; }
+.ghost-line.w90 { width: 90%; }
+
+/* ============ reduced motion ============
+   Tab switches are already instant cuts; only the press transform animates. */
+@media (prefers-reduced-motion: reduce) {
+  .tabbar .tab { transition: none !important; }
+}
