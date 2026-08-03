@@ -11,14 +11,6 @@ Apple gives you two ways to prove who you are to their developer machinery, and 
 
 The API key wins for everything we automate, and not just for convenience: it has a **role** you pick at creation, it's **revocable** with one click without touching your Apple ID, and it never expires on its own. Once this model is in your head, you could rebuild the skill from scratch — everything in it is just careful handling of one private key.
 
-## Why official-API-only (the fastlane story)
-
-An earlier version of this skill used fastlane to cover the one thing Apple's official API doesn't offer: creating a new app record. fastlane does it by riding Apple's *private* web endpoints with an Apple ID session — clever, widely used, and fundamentally at Apple's mercy.
-
-On this skill's **first live run** (August 2, 2026), that half broke in the most instructive way possible: password accepted, 2FA code accepted, then `Unauthorized Access` — because Apple had changed their login flow to a new protocol, and no released version of fastlane could complete a login. Not our credentials, not our setup; the ecosystem itself, mid-breakage. The fix existed only as open pull requests.
-
-That settled the design question. The skill is now built entirely on the API Apple publicly commits to, and the gap is handled honestly instead of cleverly: **creating an app record is a ~3-minute website visit, once per app's lifetime.** Account-level admin (agreements, tax, banking, the API-access approval itself) also stays on the website — Apple deliberately keeps those human. Everything else is automated. We don't build on things that break on someone else's schedule.
-
 ## The threat model, honestly
 
 The role we use is **App Manager** — the least-privileged role that still covers full app management: bundle IDs, metadata, builds, TestFlight, and some user-and-access management. But know what you're holding: a team key is **team-wide**. It applies to your entire app portfolio and cannot be scoped to one app. The real difference from Admin is ceilings, not scope — Admin adds account-level powers automation never needs.
