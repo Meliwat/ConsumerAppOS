@@ -4,7 +4,7 @@ Hi — this is ConsumerAppOS. It's a repo of agent skills for building small con
 
 <a href="https://buymeacoffee.com/meliwat" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
 
-If you're here to build: the skills (coming next) will walk an agent through every stage of producing an app, from brief to App Store. If you're here to learn: every skill explains its own reasoning, so by reading them you pick up the judgment to change them — or to rebuild this whole thing from an empty folder if you had to. That's the bar I write everything here to.
+If you're here to build: the skills (WIP) walk an agent through every stage of producing an app, from brief to App Store. If you're here to learn: every skill explains its own reasoning, so by reading them you pick up the judgment to change them — or to rebuild this whole thing from an empty folder if you had to. That's the bar I write everything here to.
 
 **Author:** meliwat
 
