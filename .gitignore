@@ -1,0 +1,6 @@
+# Credentials must never enter this repo (see skills/apple-setup)
+*.p8
+AuthKey_*.p8
+
+# OS noise
+.DS_Store
