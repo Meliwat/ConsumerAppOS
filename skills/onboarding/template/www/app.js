@@ -1,13 +1,24 @@
 /* onboarding flow — fixed skeleton logic. Structure is canonical; do not
-   add/remove/reorder screens. Content lives in index.html slots. */
+   add/remove/reorder screens. Content lives in index.html slots.
+   ONE transition mechanism for the whole app: every screen change — including
+   quiz question → question — goes through show(). Zero special cases. */
 (function () {
   "use strict";
 
-  var SEQUENCE = ["welcome", "quiz", "affirm", "building", "proof", "notify", "paywall", "home"];
+  /* Build stamp: bump on every device push so stale-delivery is visible
+     on-screen. Rendered bottom corner of the welcome screen. */
+  var BUILD_STAMP = "b1";
+
+  var SEQUENCE = ["welcome", "q1", "q2", "q3", "q4", "q5", "q6", "q7",
+                  "affirm", "building", "proof", "notify", "paywall", "home"];
   var QUIZ_TOTAL = 7;
   var STORE_KEY = "onboarding.answers";
-  var TRANSITION_MS = 240;
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var TRANSITION_MS = 260; // full-push duration; cleanup timeout keys off this
+
+  /* Read Reduce Motion FRESH at each transition — a load-time snapshot can
+     race WKWebView's reporting of the OS setting and mis-route the lifecycle. */
+  var rmQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function reduceMotionNow() { return rmQuery.matches; }
 
   /* Storage adapter — repo plugin convention: native implementation with a
      browser fallback. Onboarding answers are DURABLE app state. The native
@@ -38,10 +49,13 @@
     }
   };
 
-  var state = { answers: {}, qIndex: 1 };
+  var state = { answers: {} };
+  /* Selection UI rule: a question shows NO selection and a disabled Continue
+     on FIRST arrival, even when a persisted answer exists — pre-selection is
+     shown only when navigating back to a question answered THIS session. */
+  var sessionAnswered = {};
   var hydrated = false;      // interaction gated until hydration (or timeout)
-  var quizLocked = false;    // blocks double-tap double-advance
-  var transitioning = false; // blocks re-entrant screen changes
+  var transitioning = false; // blocks re-entrant screen changes (all screens, quiz included)
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -55,19 +69,58 @@
 
   var progressTrack = $(".progress-track");
   var progressFill = $(".progress-fill");
+  var stage = $("#screen");
 
-  /* Whole-flow progress: 14 equal units — welcome(1), quiz Q1-Q7 (2-8),
-     affirm(9), building(10), proof(11), notify(12), paywall(13), home(14).
-     Visibly filled from step 1, full at the final screen; aria stays in sync. */
-  var TOTAL_STEPS = 14;
-  var SCREEN_STEP = { welcome: 1, affirm: 9, building: 10, proof: 11, notify: 12, paywall: 13, home: 14 };
+  /* Focusing an element inside a screen that is still translated offscreen
+     makes WebKit scroll the overflow-hidden stage to reveal it — the scroll
+     offset combines with the animating transforms and the push geometry
+     breaks. Always focus with preventScroll and pin the stage at 0. */
+  function focusHeading(el) {
+    if (!el) return;
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    stage.scrollLeft = 0; stage.scrollTop = 0;
+  }
+
+  /* ---- entrance choreography: generic, DOM-order-driven stagger.
+     prep before the push (content hidden while the panel slides), run at
+     push completion. Budget: n*40ms stagger + 240ms rise <= ~450ms. Never
+     under reduced motion — everything appears instantly at end state. ---- */
+  var STAGGER_MS = 30, RISE_MS = 200;
+
+  function prepChoreo(container) {
+    if (reduceMotionNow()) return null;
+    var els = $$(".screen-body > *, .cta-bar > *", container);
+    if (!els.length) return null;
+    els.forEach(function (el, i) { el.style.transitionDelay = (i * STAGGER_MS) + "ms"; });
+    container.classList.add("choreo", "choreo-pre");
+    return els;
+  }
+
+  function runChoreo(container, els) {
+    if (!els) return;
+    void container.offsetWidth; // commit the hidden start state
+    container.classList.remove("choreo-pre");
+    setTimeout(function () {
+      container.classList.remove("choreo");
+      els.forEach(function (el) { el.style.transitionDelay = ""; });
+    }, els.length * STAGGER_MS + RISE_MS + 60);
+  }
+
+  /* Whole-flow progress: 14 equal units, one per screen in SEQUENCE.
+     Visibly filled from step 1, full at the final screen; aria in sync. */
+  var TOTAL_STEPS = SEQUENCE.length;
   function setProgress(step) {
     progressFill.style.width = (step / TOTAL_STEPS * 100) + "%";
     progressTrack.setAttribute("aria-valuenow", String(step));
   }
 
-  /* Restored state must be shaped exactly like we saved it: keys q1..q5,
-     values "1".."3". Anything else is dropped, never trusted. */
+  function quizIndex(name) {
+    var m = /^q([1-7])$/.exec(name);
+    return m ? Number(m[1]) : 0;
+  }
+
+  /* Restored state must be shaped exactly like we saved it: keys q1..q7,
+     values "1".."4". Anything else is dropped, never trusted. */
   function sanitizeAnswers(raw) {
     var clean = {};
     if (raw && typeof raw === "object") {
@@ -79,31 +132,43 @@
     return clean;
   }
 
-  /* ---- screen lifecycle: enter/leave classes; display:none can't animate ---- */
-  function show(name) {
+  /* ---- THE screen lifecycle: enter/leave classes; display:none can't animate.
+     A new transition synchronously completes the previous one's cleanup first
+     (fast taps never overlap two lifecycles); transitionend is the primary
+     cleanup signal; the timeout fallback is generous. Reduced motion is a
+     clean instant cut (CSS additionally hides .leaving under RM). ---- */
+  var pendingScreenCleanup = null;
+
+  function show(name, back) {
     var cur = $(".screen.active");
     var nxt = $('.screen[data-screen="' + name + '"]');
     if (!nxt || cur === nxt) return;
-    if (reduceMotion || !cur) {
+    if (pendingScreenCleanup) pendingScreenCleanup(); // cancel/complete previous NOW
+    if (reduceMotionNow() || !cur) {
       if (cur) cur.classList.remove("active");
       nxt.classList.add("active");
       afterShow(name, nxt);
       return;
     }
     transitioning = true;
+    var choreoEls = prepChoreo(nxt); // content hidden while the panel slides in
     cur.classList.add("leaving");
+    if (back) { cur.classList.add("to-right"); nxt.classList.add("from-left"); }
     cur.classList.remove("active");
     nxt.classList.add("enter", "active");
-    // double rAF: let the enter state paint, then transition to active
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () { nxt.classList.remove("enter"); });
-    });
+    // Force a synchronous style/layout flush so the enter state is COMMITTED
+    // before it changes — double-rAF alone can coalesce into one flush in
+    // WebKit, cancelling the transition (push degrades to a crossfade).
+    void nxt.offsetWidth;
+    requestAnimationFrame(function () { nxt.classList.remove("enter"); });
     var done = false;
     function finish() {
       if (done) return;
       done = true;
+      pendingScreenCleanup = null;
       cur.removeEventListener("transitionend", onEnd);
-      cur.classList.remove("leaving");
+      cur.classList.remove("leaving", "to-right");
+      nxt.classList.remove("from-left");
       transitioning = false;
     }
     // transitionend bubbles from descendants: only the outgoing screen's own
@@ -112,17 +177,21 @@
     function onEnd(ev) {
       if (ev.target === cur && ev.propertyName === "opacity") finish();
     }
+    pendingScreenCleanup = finish;
     cur.addEventListener("transitionend", onEnd);
-    setTimeout(finish, TRANSITION_MS + 80);
+    setTimeout(finish, TRANSITION_MS + 250); // generous: fallback only, never the scissors
+    // choreography overlaps the push tail: stagger starts as the screen is
+    // ~60% arrived, so the heading is visible essentially as it lands —
+    // no frame of empty screen.
+    setTimeout(function () { runChoreo(nxt, choreoEls); }, Math.round(TRANSITION_MS * 0.6));
     afterShow(name, nxt);
   }
 
   function afterShow(name, sectionEl) {
-    setProgress(name === "quiz" ? 1 + state.qIndex : SCREEN_STEP[name]);
-    var heading = name === "quiz"
-      ? $('.quiz-step[data-q="' + state.qIndex + '"] h2')
-      : sectionEl.querySelector("h1, h2");
-    if (heading) heading.focus();
+    setProgress(SEQUENCE.indexOf(name) + 1);
+    var q = quizIndex(name);
+    if (q) { reflectSelection(q); syncContinue(q); }
+    focusHeading(sectionEl.querySelector("h1, h2"));
     if (name === "building") runBuilding();
   }
 
@@ -131,47 +200,32 @@
     if (i >= 0 && i < SEQUENCE.length - 1) show(SEQUENCE[i + 1]);
   }
 
-  /* ---- quiz ---- */
-  function showQuizStep(n) {
-    var cur = $(".quiz-step.active");
-    var nxt = $('.quiz-step[data-q="' + n + '"]');
-    state.qIndex = n;
-    if (nxt && cur !== nxt) {
-      if (reduceMotion || !cur) {
-        if (cur) cur.classList.remove("active");
-        nxt.classList.add("active");
-      } else {
-        cur.classList.add("leaving");
-        cur.classList.remove("active");
-        nxt.classList.add("enter", "active");
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () { nxt.classList.remove("enter"); });
-        });
-        setTimeout(function () { cur.classList.remove("leaving"); }, TRANSITION_MS + 80);
-      }
-    }
-    $(".back-btn").hidden = n < 2;
-    setProgress(1 + n);
-    reflectSelection(n);
-    syncQuizContinue();
-    var h = $('.quiz-step[data-q="' + n + '"] h2');
-    if (h) h.focus();
-    quizLocked = false;
-  }
-
+  /* ---- quiz interaction: select, then per-question Continue ---- */
   function reflectSelection(q) {
     $$('.btn.option[data-q="' + q + '"]').forEach(function (b) {
-      var sel = state.answers["q" + q] === b.dataset.opt;
+      var sel = !!sessionAnswered["q" + q] && state.answers["q" + q] === b.dataset.opt;
       b.classList.toggle("selected", sel);
       b.setAttribute("aria-pressed", sel ? "true" : "false");
-      b.disabled = false;
     });
   }
 
-  function syncQuizContinue() {
-    var btn = $('[data-action="quiz-continue"]');
-    if (btn) btn.disabled = !state.answers["q" + state.qIndex];
+  function syncContinue(q) {
+    var btn = $('[data-action="q-continue"][data-q="' + q + '"]');
+    if (btn) btn.disabled = !sessionAnswered["q" + q]; // disabled until answered THIS session
   }
+
+  function onOption(btn) {
+    haptic.light();
+    var q = Number(btn.dataset.q);
+    state.answers["q" + q] = btn.dataset.opt;
+    sessionAnswered["q" + q] = true;
+    store.set(STORE_KEY, state.answers);
+    reflectSelection(q);
+    syncContinue(q);
+  }
+
+  /* ---- building: sequenced checklist (~3s), then plan reveal off the final check ---- */
+  var buildingRunning = false;
 
   function answerText(q) {
     var opt = state.answers["q" + q];
@@ -180,66 +234,66 @@
     return btn ? btn.textContent.trim() : "";
   }
 
-  /* Select + Continue: tapping an option selects it (changeable until
-     Continue); advancing is the Continue button's job. */
-  function onOption(btn) {
-    haptic.light();
-    var q = Number(btn.dataset.q);
-    state.answers["q" + q] = btn.dataset.opt;
-    store.set(STORE_KEY, state.answers);
-    reflectSelection(q);
-    syncQuizContinue();
-  }
-
-  function onQuizContinue() {
-    if (quizLocked) return; // double-tap cannot double-advance
-    if (!state.answers["q" + state.qIndex]) return;
-    quizLocked = true;
-    haptic.light();
-    if (state.qIndex < QUIZ_TOTAL) showQuizStep(state.qIndex + 1);
-    else { quizLocked = false; next("quiz"); }
-  }
-
-  /* ---- building: 3s ring + 3 staged captions, then plan reveal ---- */
-  var buildingRunning = false;
-
   function fillPlan() {
     $$('[data-plan="a1"]').forEach(function (el) { el.textContent = answerText(1); });
     $$('[data-plan="a2"]').forEach(function (el) { el.textContent = answerText(2); });
   }
 
   function runBuilding() {
-    if (buildingRunning) return; // a stray double-entry never restarts the animation
+    if (buildingRunning) return; // a stray double-entry never restarts the sequence
     buildingRunning = true;
     var anim = $(".build-anim");
     var reveal = $(".plan-reveal");
     fillPlan();
+    var steps = $$(".build-step");
+    steps.forEach(function (s) { s.classList.remove("on", "done"); });
+    var RING_C = 326.73;
+    var ringFill = $(".ring-fill");
+    var ringLabel = $(".ring-label");
+    function setRing(frac) {
+      if (ringFill) ringFill.style.strokeDashoffset = String(RING_C * (1 - frac));
+      if (ringLabel) ringLabel.textContent = Math.round(frac * 100) + "%";
+    }
+    setRing(0);
     function revealPlan() {
       anim.hidden = true;
+      var els = prepChoreo(reveal); // plan cards cascade in like everything else
       reveal.hidden = false;
+      runChoreo(reveal, els);
       buildingRunning = false;
-      haptic.success();
-      var h = reveal.querySelector("h2");
-      if (h) h.focus();
+      focusHeading(reveal.querySelector("h2"));
     }
-    if (reduceMotion) return revealPlan(); // skip straight to the end state
     anim.hidden = false; reveal.hidden = true;
-    var ring = $(".ring");
-    var pctEl = $(".ring-pct");
-    var caption = $(".build-caption");
-    var captions = [caption.textContent, caption.dataset.c2, caption.dataset.c3];
-    var t0 = performance.now();
-    var DURATION = 3000;
-    function frame(t) {
-      var p = Math.min(1, (t - t0) / DURATION);
-      var pct = Math.round(p * 100);
-      ring.style.setProperty("--pct", pct);
-      pctEl.textContent = pct + "%";
-      caption.textContent = captions[Math.min(2, Math.floor(p * 3))];
-      if (p < 1) requestAnimationFrame(frame);
-      else revealPlan();
+    if (reduceMotionNow()) {
+      // instant checkmarks + complete ring, one short beat, advance
+      steps.forEach(function (s) { s.classList.add("on", "done"); });
+      setRing(1);
+      setTimeout(function () { haptic.success(); revealPlan(); }, 500);
+      return;
     }
-    requestAnimationFrame(frame);
+    var HOLD = 520, GAP = 180; // per line: rise in -> spinner beat -> checkmark
+    // Ring + label fill CONTINUOUSLY across the whole sequence: one rAF tween
+    // from 0 -> 100% over exactly the time until the final check resolves
+    // (steps*HOLD + (steps-1)*GAP), so the number counts through every
+    // integer and the stroke never pauses or jumps between resolves.
+    var SEQ_TOTAL = steps.length * HOLD + (steps.length - 1) * GAP;
+    var ringT0 = performance.now();
+    (function ringFrame(t) {
+      var p = Math.min(1, (t - ringT0) / SEQ_TOTAL);
+      setRing(p);
+      if (p < 1) requestAnimationFrame(ringFrame);
+    })(performance.now());
+    var i = 0;
+    (function nextStep() {
+      if (i >= steps.length) return setTimeout(revealPlan, 260); // payoff off the final check
+      var s = steps[i++];
+      s.classList.add("on");
+      setTimeout(function () {
+        s.classList.add("done");
+        if (i >= steps.length) haptic.success(); else haptic.light(); // tick per resolve, success on last
+        setTimeout(nextStep, GAP);
+      }, HOLD);
+    })();
   }
 
   /* ---- toast: element stays in the DOM; live region announces text change ---- */
@@ -254,9 +308,7 @@
 
   /* ---- actions ---- */
   var actions = {
-    "welcome-next": function () { haptic.light(); state.qIndex = 1; show("quiz"); showQuizStep(1); },
-    "quiz-back": function () { if (state.qIndex > 1) showQuizStep(state.qIndex - 1); },
-    "quiz-continue": onQuizContinue,
+    "welcome-next": function () { haptic.light(); show("q1"); },
     "affirm-next": function () { haptic.light(); next("affirm"); },
     "building-next": function () { haptic.light(); next("building"); },
     "proof-next": function () { haptic.light(); next("proof"); },
@@ -264,7 +316,7 @@
     "notify-later": function () { haptic.light(); next("notify"); },
     "paywall-cta": function () { haptic.success(); fillPlan(); show("home"); },   // PLACEHOLDER: no payment logic
     "paywall-close": function () { fillPlan(); show("home"); },
-    "paywall-restore": function () {                            // explicitly inert mock
+    "paywall-restore": function () {                                 // explicitly inert mock
       toast("Restore is wired up by the payments skill — nothing to restore in this preview.");
     }
   };
@@ -272,9 +324,20 @@
   document.addEventListener("click", function (e) {
     var btn = e.target.closest("button");
     if (!btn) return;
-    if (!hydrated) return;      // gate interaction until state hydration resolves
+    if (!hydrated) return;            // gate interaction until state hydration resolves
     if (transitioning && btn.dataset.action) return;
-    if (btn.dataset.action && actions[btn.dataset.action]) return actions[btn.dataset.action]();
+    var a = btn.dataset.action;
+    if (a === "q-continue") {
+      var q = Number(btn.dataset.q);
+      if (!sessionAnswered["q" + q]) return;
+      haptic.light();
+      return next("q" + q);
+    }
+    if (a === "q-back") {
+      var qb = Number(btn.dataset.q);
+      return show(qb > 1 ? "q" + (qb - 1) : "welcome", true); // backward: mirrored push
+    }
+    if (a && actions[a]) return actions[a]();
     if (btn.classList.contains("option")) return onOption(btn);
     if (btn.classList.contains("price")) selectPrice(btn);
   });
@@ -300,15 +363,19 @@
     if (nxt) { e.preventDefault(); selectPrice(nxt); nxt.focus(); }
   });
 
+  var stampEl = document.getElementById("buildstamp");
+  if (stampEl) stampEl.textContent = BUILD_STAMP;
+
   /* ---- init: hydrate durable answers, gated with a fast timeout so a hung
      native bridge can never block the app. Flow always starts at welcome. ---- */
   var hydrationTimeout = new Promise(function (res) { setTimeout(function () { res(null); }, 800); });
   Promise.race([store.get(STORE_KEY), hydrationTimeout])
     .then(function (saved) {
-      state.answers = sanitizeAnswers(saved);
+      state.answers = sanitizeAnswers(saved); // kept as data; never pre-selects UI on first arrival
+      for (var i = 1; i <= QUIZ_TOTAL; i++) syncContinue(i); // all Continues start disabled
       fillPlan();
     })
     .catch(function () { /* hydration failure: start clean */ })
     .then(function () { hydrated = true; });
-  setProgress(1); // welcome is step 1 of 11 — visibly started
+  setProgress(1); // welcome is step 1 of 14 — visibly started
 })();

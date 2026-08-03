@@ -58,79 +58,125 @@
           <div class="cta-bar">
             <button class="btn primary" data-action="welcome-next">Get Started</button>
           </div>
+          <span id="buildstamp" aria-hidden="true"></span>
         </section>
 
-        <!-- 2 · quiz (7 questions × 4 options; select + Continue, no auto-advance) -->
-        <section class="screen" data-screen="quiz">
-          <button class="back-btn" data-action="quiz-back" aria-label="Previous question" hidden>
+        <!-- quiz question 1 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q1">
+          <button class="back-btn" data-action="q-back" data-q="1" aria-label="Previous question">
             <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
           </button>
-
-          <div class="quiz-step active" data-q="1">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q1_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="1" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT1_ICON}}"/></svg>{{Q1_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="1" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT2_ICON}}"/></svg>{{Q1_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="1" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT3_ICON}}"/></svg>{{Q1_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="1" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT4_ICON}}"/></svg>{{Q1_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="2">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q2_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="2" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT1_ICON}}"/></svg>{{Q2_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="2" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT2_ICON}}"/></svg>{{Q2_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="2" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT3_ICON}}"/></svg>{{Q2_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="2" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT4_ICON}}"/></svg>{{Q2_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="3">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q3_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="3" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT1_ICON}}"/></svg>{{Q3_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="3" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT2_ICON}}"/></svg>{{Q3_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="3" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT3_ICON}}"/></svg>{{Q3_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="3" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT4_ICON}}"/></svg>{{Q3_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="4">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q4_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="4" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT1_ICON}}"/></svg>{{Q4_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="4" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT2_ICON}}"/></svg>{{Q4_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="4" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT3_ICON}}"/></svg>{{Q4_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="4" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT4_ICON}}"/></svg>{{Q4_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="5">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q5_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="5" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT1_ICON}}"/></svg>{{Q5_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="5" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT2_ICON}}"/></svg>{{Q5_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="5" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT3_ICON}}"/></svg>{{Q5_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="5" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT4_ICON}}"/></svg>{{Q5_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="6">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q6_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="6" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT1_ICON}}"/></svg>{{Q6_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="6" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT2_ICON}}"/></svg>{{Q6_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="6" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT3_ICON}}"/></svg>{{Q6_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="6" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT4_ICON}}"/></svg>{{Q6_OPT4_TEXT}}</button>
-            </div>
-          </div>
-          <div class="quiz-step" data-q="7">
-            <div class="screen-body">
-              <h2 tabindex="-1">{{Q7_TEXT}}</h2>
-              <button class="btn option" aria-pressed="false" data-q="7" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT1_ICON}}"/></svg>{{Q7_OPT1_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="7" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT2_ICON}}"/></svg>{{Q7_OPT2_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="7" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT3_ICON}}"/></svg>{{Q7_OPT3_TEXT}}</button>
-              <button class="btn option" aria-pressed="false" data-q="7" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT4_ICON}}"/></svg>{{Q7_OPT4_TEXT}}</button>
-            </div>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q1_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="1" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT1_ICON}}"/></svg>{{Q1_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="1" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT2_ICON}}"/></svg>{{Q1_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="1" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT3_ICON}}"/></svg>{{Q1_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="1" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q1_OPT4_ICON}}"/></svg>{{Q1_OPT4_TEXT}}</button>
           </div>
           <div class="cta-bar">
-            <button class="btn primary" data-action="quiz-continue" disabled>Continue</button>
+            <button class="btn primary" data-action="q-continue" data-q="1" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 2 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q2">
+          <button class="back-btn" data-action="q-back" data-q="2" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q2_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="2" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT1_ICON}}"/></svg>{{Q2_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="2" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT2_ICON}}"/></svg>{{Q2_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="2" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT3_ICON}}"/></svg>{{Q2_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="2" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q2_OPT4_ICON}}"/></svg>{{Q2_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="2" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 3 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q3">
+          <button class="back-btn" data-action="q-back" data-q="3" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q3_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="3" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT1_ICON}}"/></svg>{{Q3_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="3" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT2_ICON}}"/></svg>{{Q3_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="3" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT3_ICON}}"/></svg>{{Q3_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="3" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q3_OPT4_ICON}}"/></svg>{{Q3_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="3" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 4 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q4">
+          <button class="back-btn" data-action="q-back" data-q="4" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q4_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="4" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT1_ICON}}"/></svg>{{Q4_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="4" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT2_ICON}}"/></svg>{{Q4_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="4" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT3_ICON}}"/></svg>{{Q4_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="4" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q4_OPT4_ICON}}"/></svg>{{Q4_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="4" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 5 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q5">
+          <button class="back-btn" data-action="q-back" data-q="5" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q5_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="5" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT1_ICON}}"/></svg>{{Q5_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="5" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT2_ICON}}"/></svg>{{Q5_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="5" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT3_ICON}}"/></svg>{{Q5_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="5" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q5_OPT4_ICON}}"/></svg>{{Q5_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="5" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 6 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q6">
+          <button class="back-btn" data-action="q-back" data-q="6" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q6_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="6" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT1_ICON}}"/></svg>{{Q6_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="6" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT2_ICON}}"/></svg>{{Q6_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="6" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT3_ICON}}"/></svg>{{Q6_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="6" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q6_OPT4_ICON}}"/></svg>{{Q6_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="6" disabled>Continue</button>
+          </div>
+        </section>
+
+        <!-- quiz question 7 of 7 (a REAL screen: same push lifecycle as every other) -->
+        <section class="screen quiz" data-screen="q7">
+          <button class="back-btn" data-action="q-back" data-q="7" aria-label="Previous question">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+          </button>
+          <div class="screen-body">
+            <h2 tabindex="-1">{{Q7_TEXT}}</h2>
+            <button class="btn option" aria-pressed="false" data-q="7" data-opt="1"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT1_ICON}}"/></svg>{{Q7_OPT1_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="7" data-opt="2"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT2_ICON}}"/></svg>{{Q7_OPT2_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="7" data-opt="3"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT3_ICON}}"/></svg>{{Q7_OPT3_TEXT}}</button>
+            <button class="btn option" aria-pressed="false" data-q="7" data-opt="4"><svg class="icon opt-icon" aria-hidden="true"><use href="#i-{{Q7_OPT4_ICON}}"/></svg>{{Q7_OPT4_TEXT}}</button>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="q-continue" data-q="7" disabled>Continue</button>
           </div>
         </section>
 
@@ -152,8 +198,19 @@
           <div class="build-anim">
             <div class="screen-body center">
               <h2 tabindex="-1">Building your {{PLAN_NOUN}}…</h2>
-              <div class="ring" aria-hidden="true"><span class="ring-pct">0%</span></div>
-              <p class="build-caption" aria-live="polite" data-c2="{{BUILD_CAPTION_2}}" data-c3="{{BUILD_CAPTION_3}}">{{BUILD_CAPTION_1}}</p>
+              <div class="build-ring-wrap" aria-hidden="true">
+                <svg class="build-ring" viewBox="0 0 120 120">
+                  <circle class="ring-track" cx="60" cy="60" r="52"/>
+                  <circle class="ring-fill" cx="60" cy="60" r="52"/>
+                </svg>
+                <span class="ring-label">0%</span>
+              </div>
+              <ul class="build-steps" aria-live="polite">
+                <li class="build-step"><span class="step-spinner" aria-hidden="true"></span><svg class="icon check-icon step-check" aria-hidden="true"><use href="#i-check"/></svg><span>{{BUILD_STEP_1}}</span></li>
+                <li class="build-step"><span class="step-spinner" aria-hidden="true"></span><svg class="icon check-icon step-check" aria-hidden="true"><use href="#i-check"/></svg><span>{{BUILD_STEP_2}}</span></li>
+                <li class="build-step"><span class="step-spinner" aria-hidden="true"></span><svg class="icon check-icon step-check" aria-hidden="true"><use href="#i-check"/></svg><span>{{BUILD_STEP_3}}</span></li>
+                <li class="build-step"><span class="step-spinner" aria-hidden="true"></span><svg class="icon check-icon step-check" aria-hidden="true"><use href="#i-check"/></svg><span>{{BUILD_STEP_4}}</span></li>
+              </ul>
             </div>
           </div>
           <div class="plan-reveal" hidden>

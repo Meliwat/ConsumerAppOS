@@ -118,17 +118,36 @@ html.native #statusbar { display: none; } /* real iOS status bar takes over */
 
 /* Screen lifecycle: .enter (pre-transition state) -> .active; leaving screen
    keeps rendering as .leaving for the transition, then is hidden by JS.
-   display:none cannot animate, so visibility is class-driven. */
+   display:none cannot animate, so visibility is class-driven.
+
+   iOS-style directional PUSH, not a cross-fade: the incoming screen slides in
+   from the right at full opacity and covers; the outgoing screen slides left
+   ~28% underneath while dimming slightly. Deceleration curve approximates
+   UIKit. Transform + opacity only (GPU-friendly, no layout animation).
+   .enter carries transition:none so the offscreen start state paints with no
+   flash of the final position before the animation begins. */
 .screen {
   position: absolute; inset: 0;
   display: none; flex-direction: column;
   min-height: 0;
-  transition: opacity 240ms ease, transform 240ms ease;
+  /* OPAQUE: a push must COVER the outgoing screen, not blend with it.
+     Transparent screens double-expose both contents during the slide —
+     the exact "flash of the old screen" seen frame-by-frame in WKWebView. */
+  background: var(--bg);
+  transition: opacity 260ms cubic-bezier(0.32, 0.72, 0, 1),
+              transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .screen.active, .screen.leaving { display: flex; }
-.screen.active { opacity: 1; transform: translateX(0); z-index: 2; }
-.screen.enter { opacity: 0; transform: translateX(24px); }
-.screen.leaving { opacity: 0; transform: translateX(-24px); z-index: 1; }
+/* translate3d + will-change: promote both screens to compositor layers for
+   the duration of the push (WKWebView layer-promotion hygiene).
+   Direction-aware: default is forward (enter from right, leave left);
+   .from-left / .to-right mirror it for backward navigation. */
+.screen.active { opacity: 1; transform: translate3d(0, 0, 0); z-index: 2; }
+.screen.enter { opacity: 1; transform: translate3d(100%, 0, 0); transition: none; }
+.screen.enter.from-left { transform: translate3d(-100%, 0, 0); }
+.screen.leaving { opacity: 0.75; transform: translate3d(-28%, 0, 0); z-index: 1; }
+.screen.leaving.to-right { transform: translate3d(28%, 0, 0); }
+.screen.enter, .screen.leaving { will-change: transform, opacity; }
 
 .screen-body {
   flex: 1 1 auto; min-height: 0;
@@ -177,7 +196,8 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
 }
 .progress-fill {
   height: 100%; width: 0; background: var(--grad);
-  transition: width 200ms ease;
+  /* fill glides in sync with the push, same curve — never snaps */
+  transition: width 320ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ============ buttons ============ */
@@ -188,7 +208,9 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
   border: 2px solid transparent; border-radius: var(--radius);
   background: var(--card); color: var(--ink);
   box-shadow: var(--shadow); cursor: pointer;
-  transition: transform 120ms ease;
+  /* press physics: fast ease-out press-in, springs back on release.
+     GPU transform only; active-state only — never hover. */
+  transition: transform 90ms ease-out;
 }
 .btn:active { transform: scale(0.97); }
 .btn.primary { background: var(--grad); color: var(--on-accent); font-weight: 700; font-size: 17px; }
@@ -211,6 +233,8 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
 }
 .back-btn { left: 16px; }
 .close-btn { right: 16px; }
+.back-btn, .close-btn { transition: transform 90ms ease-out; }
+.back-btn:active, .close-btn:active { transform: scale(0.92); }
 
 .cta-bar {
   flex: none;
@@ -219,38 +243,62 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
 }
 
 /* ============ quiz steps ============ */
-.quiz-step {
-  display: none; flex: 1 1 auto; min-height: 0; flex-direction: column;
-  transition: opacity 200ms ease;
-}
-.quiz-step.active, .quiz-step.leaving { display: flex; }
-.quiz-step.active { opacity: 1; }
-.quiz-step.enter, .quiz-step.leaving { opacity: 0; }
-.quiz-step.leaving { position: absolute; inset: 0; }
-.quiz-step .screen-body {
+/* Quiz question screens: ordinary screens (same push lifecycle, no special
+   mechanism). Only their body layout differs. */
+.screen.quiz .screen-body {
   padding-top: 60px; /* clears the back chevron */
   justify-content: center;
   /* lift the centered group above true center — reads composed, not sunken */
   padding-bottom: calc(clamp(24px, 9vh, 90px) + var(--safe-bottom));
 }
-.quiz-step h2 { margin-bottom: clamp(6px, 3.5vh, 34px); }
+.screen.quiz h2 { margin-bottom: clamp(6px, 3.5vh, 34px); }
 
-/* ============ building ============ */
+/* ============ building: sequenced checklist ============
+   Lines appear one at a time (same rise + easing family as the entrance
+   choreography), hold with a spinner, resolve to a checkmark. */
 .build-anim, .plan-reveal { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .plan-reveal[hidden], .build-anim[hidden] { display: none; }
-.ring {
-  --pct: 0;
-  width: 150px; height: 150px; border-radius: 50%;
-  background: conic-gradient(var(--accent) calc(var(--pct) * 1%), var(--sel-bg) 0);
-  display: flex; align-items: center; justify-content: center;
+/* circular progress ring: dashoffset-driven, fills in sync with the
+   checklist — each resolved line advances it; complete on the last check.
+   Circumference = 2*pi*52 = 326.73. */
+.build-ring-wrap { position: relative; width: 112px; height: 112px; }
+.build-ring { width: 112px; height: 112px; transform: rotate(-90deg); }
+.ring-track, .ring-fill { fill: none; stroke-width: 9; }
+.ring-track { stroke: var(--sel-bg); }
+.ring-fill {
+  stroke: var(--accent); stroke-linecap: round;
+  stroke-dasharray: 326.73; stroke-dashoffset: 326.73;
+  /* no CSS transition: a rAF tween drives the offset continuously across the
+     whole sequence — CSS smoothing on top would double-ease and lag */
 }
-.ring-pct {
-  width: 118px; height: 118px; border-radius: 50%;
-  background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 26px;
+.ring-label {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 22px; color: var(--ink);
 }
-.build-caption { color: var(--muted); min-height: 1.5em; }
+
+.build-steps {
+  list-style: none; width: 100%; max-width: 320px; text-align: left;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.build-step {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--muted); font-weight: 600;
+  opacity: 0; transform: translate3d(0, 10px, 0);
+  transition: opacity 240ms cubic-bezier(0.32, 0.72, 0, 1),
+              transform 240ms cubic-bezier(0.32, 0.72, 0, 1),
+              color 200ms ease;
+}
+.build-step.on { opacity: 1; transform: translate3d(0, 0, 0); }
+.build-step.done { color: var(--ink); }
+.step-spinner {
+  width: 20px; height: 20px; flex: none; border-radius: 50%;
+  border: 2.5px solid var(--sel-bg); border-top-color: var(--accent);
+  animation: step-spin 800ms linear infinite;
+}
+.build-step .step-check { display: none; }
+.build-step.done .step-spinner { display: none; }
+.build-step.done .step-check { display: block; }
+@keyframes step-spin { to { transform: rotate(360deg); } }
 
 /* ============ cards ============ */
 .card {
@@ -293,6 +341,11 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
 
 .empty-state { color: var(--muted); text-align: center; margin-top: 24px; }
 
+#buildstamp {
+  position: absolute; right: 10px; bottom: calc(4px + var(--safe-bottom));
+  font-size: 10px; color: var(--muted); opacity: 0.6; z-index: 3;
+}
+
 /* ============ toast ============
    Always in the DOM (aria-live regions announce only when text changes in
    an existing region); shown/hidden via class, never [hidden]. */
@@ -308,8 +361,34 @@ h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
 }
 #toast.show { opacity: 1; }
 
+/* ============ entrance choreography ============
+   After a push completes, content composes in DOM order: each direct child
+   of .screen-body / .cta-bar rises 10px + fades in, staggered by inline
+   transition-delay set from JS (a generic utility — no per-screen code).
+   .choreo-pre holds the hidden start state with transition:none (no flash);
+   .choreo provides the rise transition; both are removed after the cascade
+   so element-level transitions (press physics, selection) return to normal.
+   Elements are interactive throughout — opacity never blocks pointer events. */
+.choreo .screen-body > *, .choreo .cta-bar > * {
+  transition: opacity 200ms cubic-bezier(0.32, 0.72, 0, 1),
+              transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.choreo-pre .screen-body > *, .choreo-pre .cta-bar > * {
+  opacity: 0; transform: translate3d(0, 10px, 0); transition: none;
+}
+
 /* ============ reduced motion ============ */
+/* Reduced motion = CLEAN INSTANT CUT, never a partial fade: the leaving
+   screen is hidden in the same frame the entering one shows — no opacity
+   animation, no dim, no intermediate paint; progress updates unanimated.
+   display:none on .leaving makes the cut hold even if the animated JS path
+   ever runs under RM (e.g. a late matchMedia report). */
 @media (prefers-reduced-motion: reduce) {
-  .screen, .quiz-step, .progress-fill, .btn, #toast { transition: none; }
-  .screen.enter, .screen.leaving { transform: none; }
+  .screen, .progress-fill, .btn, #toast, .build-step, .ring-fill,
+  .choreo .screen-body > *, .choreo .cta-bar > * { transition: none !important; }
+  .build-step { opacity: 1; transform: none; }
+  .step-spinner { animation: none; }
+  .choreo-pre .screen-body > *, .choreo-pre .cta-bar > * { opacity: 1; transform: none; }
+  .screen.enter { transform: none; opacity: 1; }
+  .screen.leaving { display: none !important; }
 }
