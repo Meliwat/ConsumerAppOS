@@ -4,12 +4,13 @@ This is the scaffold skill. Give it an app name and one line about what the app 
 
 ## Fixed skeleton, curated content
 
-The core design decision: the screen sequence never changes. Welcome → quiz → plan-building → social proof → notification prime → paywall → home, every time, for every app — down to fixed question counts, CTA labels, and DOM shape. And the skeleton isn't a description the agent interprets: it lives as actual template files in this skill's `template/` folder, copied verbatim, with the app-specific content filled into marked slots. What your one-line description controls is the *content* poured into that skeleton: the promise on the welcome screen, the quiz questions, what the "plan" is called, the paywall's feature list.
+The core design decision: the screen sequence never changes. Welcome → quiz → affirmation → plan-building → social proof → notification prime → paywall → home, every time, for every app — down to fixed question counts, CTA labels, and DOM shape. And the skeleton isn't a description the agent interprets: it lives as actual template files in this skill's `template/` folder, copied verbatim, with the app-specific content filled into marked slots. What your one-line description controls is the *content* poured into that skeleton: the promise on the welcome screen, the quiz questions, what the "plan" is called, the paywall's feature list.
 
 This is an opinionated, reusable pattern, modeled closely on the reference app in this repo and on the onboarding shape common in subscription consumer apps (Cal AI is the archetype). Each stage carries a behavioral hypothesis worth knowing, because it tells you what the stage is *for*:
 
 - **Welcome** — a single clear promise before asking anything of the user.
-- **Quiz** — single-tap questions that feel like personalization; each answer is a small commitment that builds momentum.
+- **Quiz** — questions that feel like personalization; picking an answer and confirming it with Continue makes each one a small, deliberate commitment that builds momentum.
+- **Affirmation** — a brief "you're in the right place" beat after the questions; the user has just invested effort, and this acknowledges it before the payoff. (Value framing only — it never invents statistics.)
 - **Building your plan** — visibly converting the answers into something made *for them*; the pause itself signals work being done on their behalf.
 - **Social proof** — reassurance at the moment doubt would naturally surface.
 - **Notification prime** — a soft ask before any system dialog, so the real prompt (wired later) arrives pre-justified and a "no" here costs nothing permanent.
@@ -26,6 +27,8 @@ A WebView app without deliberate work feels like a website in a box — text acc
 So the generated shell bakes in the full checklist: zoom suppression (viewport meta plus Capacitor's `zoomEnabled: false`), the body locked into an app frame with scrolling only in inner regions, text selection off everywhere except inputs, real safe-area handling for notch and home indicator, the system font stack, 44px touch targets with press states instead of hover, and accessibility as fixed behavior — real buttons, focus moving to each new screen, reduced-motion honored. None of it is visible in a screenshot; all of it is the difference between "app" and "webpage."
 
 One nice trick from the reference implementation: native-only behaviors are gated on detecting the Capacitor shell, so in a desktop browser you get a phone-shaped preview frame with a fake status bar — pleasant to develop in — while on a real device the same files go full-bleed and defer to actual safe areas.
+
+**Vendored plugin bundles, and why.** Native capabilities like haptics come as npm packages whose JS is ESM — which a plain browser can't load, and we have no bundler on purpose. So the convention: the native half gets installed into the Xcode project by the packaging skill, and the JS half lives as a small, readable, browser-ready file in `www/vendor/`, loaded like any other script. Each vendored file carries its own browser fallback (haptics quietly no-ops, or uses the browser's vibrate where it exists), which keeps the golden rule intact: the preview always runs, errors never come from a capability the browser doesn't have — and on the phone, tapping through the quiz *feels* like an app, because it taps back.
 
 ## Give it more, get more
 

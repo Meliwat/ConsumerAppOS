@@ -3,8 +3,8 @@
 (function () {
   "use strict";
 
-  var SEQUENCE = ["welcome", "quiz", "building", "proof", "notify", "paywall", "home"];
-  var QUIZ_TOTAL = 5;
+  var SEQUENCE = ["welcome", "quiz", "affirm", "building", "proof", "notify", "paywall", "home"];
+  var QUIZ_TOTAL = 7;
   var STORE_KEY = "onboarding.answers";
   var TRANSITION_MS = 240;
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -46,8 +46,25 @@
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
 
+  /* Haptics via the vendored wrapper (www/vendor/haptics.js) — guarded so a
+     missing vendor file can never break the flow. */
+  var haptic = {
+    light: function () { if (window.AppHaptics) window.AppHaptics.light(); },
+    success: function () { if (window.AppHaptics) window.AppHaptics.success(); }
+  };
+
   var progressTrack = $(".progress-track");
   var progressFill = $(".progress-fill");
+
+  /* Whole-flow progress: 14 equal units — welcome(1), quiz Q1-Q7 (2-8),
+     affirm(9), building(10), proof(11), notify(12), paywall(13), home(14).
+     Visibly filled from step 1, full at the final screen; aria stays in sync. */
+  var TOTAL_STEPS = 14;
+  var SCREEN_STEP = { welcome: 1, affirm: 9, building: 10, proof: 11, notify: 12, paywall: 13, home: 14 };
+  function setProgress(step) {
+    progressFill.style.width = (step / TOTAL_STEPS * 100) + "%";
+    progressTrack.setAttribute("aria-valuenow", String(step));
+  }
 
   /* Restored state must be shaped exactly like we saved it: keys q1..q5,
      values "1".."3". Anything else is dropped, never trusted. */
@@ -56,7 +73,7 @@
     if (raw && typeof raw === "object") {
       for (var i = 1; i <= QUIZ_TOTAL; i++) {
         var v = raw["q" + i];
-        if (v === "1" || v === "2" || v === "3") clean["q" + i] = v;
+        if (v === "1" || v === "2" || v === "3" || v === "4") clean["q" + i] = v;
       }
     }
     return clean;
@@ -101,7 +118,7 @@
   }
 
   function afterShow(name, sectionEl) {
-    progressTrack.hidden = name !== "quiz";
+    setProgress(name === "quiz" ? 1 + state.qIndex : SCREEN_STEP[name]);
     var heading = name === "quiz"
       ? $('.quiz-step[data-q="' + state.qIndex + '"] h2')
       : sectionEl.querySelector("h1, h2");
@@ -134,8 +151,9 @@
       }
     }
     $(".back-btn").hidden = n < 2;
-    updateProgress();
+    setProgress(1 + n);
     reflectSelection(n);
+    syncQuizContinue();
     var h = $('.quiz-step[data-q="' + n + '"] h2');
     if (h) h.focus();
     quizLocked = false;
@@ -150,10 +168,9 @@
     });
   }
 
-  function updateProgress() {
-    var answered = Object.keys(state.answers).length;
-    progressFill.style.width = (answered / QUIZ_TOTAL) * 100 + "%";
-    progressTrack.setAttribute("aria-valuenow", String(answered));
+  function syncQuizContinue() {
+    var btn = $('[data-action="quiz-continue"]');
+    if (btn) btn.disabled = !state.answers["q" + state.qIndex];
   }
 
   function answerText(q) {
@@ -163,23 +180,24 @@
     return btn ? btn.textContent.trim() : "";
   }
 
+  /* Select + Continue: tapping an option selects it (changeable until
+     Continue); advancing is the Continue button's job. */
   function onOption(btn) {
-    if (quizLocked) return; // double-tap cannot double-advance
-    quizLocked = true;
+    haptic.light();
     var q = Number(btn.dataset.q);
     state.answers["q" + q] = btn.dataset.opt;
     store.set(STORE_KEY, state.answers);
-    $$('.btn.option[data-q="' + q + '"]').forEach(function (b) {
-      var sel = b === btn;
-      b.classList.toggle("selected", sel);
-      b.setAttribute("aria-pressed", sel ? "true" : "false");
-      b.disabled = true; // re-enabled when the step is next shown
-    });
-    updateProgress();
-    setTimeout(function () {
-      if (q < QUIZ_TOTAL) showQuizStep(q + 1);
-      else { quizLocked = false; next("quiz"); }
-    }, 150);
+    reflectSelection(q);
+    syncQuizContinue();
+  }
+
+  function onQuizContinue() {
+    if (quizLocked) return; // double-tap cannot double-advance
+    if (!state.answers["q" + state.qIndex]) return;
+    quizLocked = true;
+    haptic.light();
+    if (state.qIndex < QUIZ_TOTAL) showQuizStep(state.qIndex + 1);
+    else { quizLocked = false; next("quiz"); }
   }
 
   /* ---- building: 3s ring + 3 staged captions, then plan reveal ---- */
@@ -200,6 +218,7 @@
       anim.hidden = true;
       reveal.hidden = false;
       buildingRunning = false;
+      haptic.success();
       var h = reveal.querySelector("h2");
       if (h) h.focus();
     }
@@ -235,13 +254,15 @@
 
   /* ---- actions ---- */
   var actions = {
-    "welcome-next": function () { state.qIndex = 1; show("quiz"); showQuizStep(1); },
+    "welcome-next": function () { haptic.light(); state.qIndex = 1; show("quiz"); showQuizStep(1); },
     "quiz-back": function () { if (state.qIndex > 1) showQuizStep(state.qIndex - 1); },
-    "building-next": function () { next("building"); },
-    "proof-next": function () { next("proof"); },
-    "notify-yes": function () { next("notify"); },   // soft ask only — no permission API here
-    "notify-later": function () { next("notify"); },
-    "paywall-cta": function () { fillPlan(); show("home"); },   // PLACEHOLDER: no payment logic
+    "quiz-continue": onQuizContinue,
+    "affirm-next": function () { haptic.light(); next("affirm"); },
+    "building-next": function () { haptic.light(); next("building"); },
+    "proof-next": function () { haptic.light(); next("proof"); },
+    "notify-yes": function () { haptic.light(); next("notify"); },   // soft ask only — no permission API here
+    "notify-later": function () { haptic.light(); next("notify"); },
+    "paywall-cta": function () { haptic.success(); fillPlan(); show("home"); },   // PLACEHOLDER: no payment logic
     "paywall-close": function () { fillPlan(); show("home"); },
     "paywall-restore": function () {                            // explicitly inert mock
       toast("Restore is wired up by the payments skill — nothing to restore in this preview.");
@@ -285,9 +306,9 @@
   Promise.race([store.get(STORE_KEY), hydrationTimeout])
     .then(function (saved) {
       state.answers = sanitizeAnswers(saved);
-      updateProgress();
       fillPlan();
     })
     .catch(function () { /* hydration failure: start clean */ })
     .then(function () { hydrated = true; });
+  setProgress(1); // welcome is step 1 of 11 — visibly started
 })();

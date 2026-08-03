@@ -32,7 +32,7 @@ Persisted per-app state: keep a small `.testflight.json` in the app folder (giti
 
 Run every item; create/fix only what's missing or wrong.
 
-1. `package.json` exists (`npm init -y` if not). Dependencies present and **pinned to the same major**: `@capacitor/core@^8`, `@capacitor/cli@^8`, `@capacitor/ios@^8`, `@capacitor/splash-screen@^8`, `@capacitor/preferences@^8` (Preferences is deferred here by `onboarding` — this is where its native half lands). If any @capacitor/* resolves to a different major, fix the ranges and reinstall — never let one package drift to 9.
+1. `package.json` exists (`npm init -y` if not). Dependencies present and **pinned to the same major**: `@capacitor/core@^8`, `@capacitor/cli@^8`, `@capacitor/ios@^8`, `@capacitor/splash-screen@^8`, `@capacitor/preferences@^8`, `@capacitor/haptics@^8` (Preferences and Haptics are deferred here by `onboarding` — this is where their native halves land; the JS halves are vendored in `www/vendor/` per the repo plugin convention). If any @capacitor/* resolves to a different major, fix the ranges and reinstall — never let one package drift to 9.
 2. `ios/` missing → `npx cap add ios`. **Workspace vs project — detect, don't assume** (live-run finding): Capacitor 8 defaults to Swift Package Manager, generating `ios/App/App.xcodeproj` + a `CapApp-SPM` local package and NO `App.xcworkspace`; a workspace exists only on CocoaPods-based projects. Set once and use everywhere xcodebuild runs:
    ```
    if [ -d ios/App/App.xcworkspace ]; then XC_KIND=-workspace XC_PATH=ios/App/App.xcworkspace

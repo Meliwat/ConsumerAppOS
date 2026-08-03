@@ -34,8 +34,11 @@ Copy `template/` into the target folder:
 <target>/www/index.html
 <target>/www/style.css
 <target>/www/app.js
-<target>/capacitor.config.json     (from template/capacitor.config.json — root, NOT in www/)
+<target>/www/vendor/haptics.js    (vendored plugin wrapper — see the plugin convention below)
+<target>/capacitor.config.json    (from template/capacitor.config.json — root, NOT in www/)
 ```
+
+**Plugin convention (haptics is its first use).** Native plugin JS never arrives via ESM imports — a browser can't resolve them and there's no bundler. Instead: the *native* side is installed by the `testflight` skill (`@capacitor/haptics@^8`, npm + `cap sync`); the *JS* side is a browser-ready wrapper checked into `www/vendor/` and loaded as a plain `<script>` tag. The wrapper (`vendor/haptics.js`) uses the natively-injected bridge (`window.Capacitor.Plugins.Haptics`) when present and falls back to `navigator.vibrate`/no-op in the browser — the preview must never error, and haptics must never break the app (every call guarded). Haptic wiring in the flow is fixed template behavior: light impact on quiz answers and screen-advance CTAs, success notification on plan reveal and the purchase CTA.
 
 `www/` is exactly what `npx cap sync` ships. No bundler, no build step, ever.
 
@@ -50,11 +53,14 @@ Every `{{SLOT}}` in the copied files must be replaced. Full slot table:
 | `{{APP_NAME}}` | index.html, capacitor.config.json | Verbatim app name |
 | `{{APP_ID}}` | capacitor.config.json | Per the namespace + slug algorithm |
 | `{{BG_HEX}}` | capacitor.config.json | MUST equal the final `--bg` token value (mismatch flashes at launch) |
-| `{{HERO_GLYPH}}` | index.html | One emoji fitting the app |
+| `{{HERO_ICON}}` | index.html | Icon NAME from the sprite library (below) |
 | `{{PROMISE_LINE}}` | index.html | One-sentence value promise |
-| `{{Q1_TEXT}}`…`{{Q5_TEXT}}` | index.html | 5 questions that read as personalization for THIS app, never a survey |
-| `{{Qn_OPTm_ICON}}` (15) | index.html | One emoji per option |
-| `{{Qn_OPTm_TEXT}}` (15) | index.html | Short single-tap answer options |
+| `{{Q1_TEXT}}`…`{{Q7_TEXT}}` | index.html | 7 questions that read as personalization for THIS app, never a survey |
+| `{{Qn_OPTm_ICON}}` (28: 7×4) | index.html | Icon NAME from the sprite library per option (reuse across screens fine; keep distinct within one question) |
+| `{{Qn_OPTm_TEXT}}` (28: 7×4) | index.html | Short answer options |
+| `{{AFFIRM_ICON}}` | index.html | Icon NAME for the affirmation interstitial |
+| `{{AFFIRM_HEADLINE}}` | index.html | "You're in the right place"-style beat between quiz and plan-building |
+| `{{AFFIRM_BODY}}` | index.html | Value framing ONLY — must not assert invented statistics or fake research claims (truthfulness rule applies) |
 | `{{PLAN_NOUN}}` | index.html | plan / program / setup / routine — whatever fits |
 | `{{BUILD_CAPTION_1..3}}` | index.html | Three staged "working on it" captions |
 | `{{TESTIMONIAL_1..3}}` | index.html | Category-plausible EXAMPLE copy — the template's `Example review` tags and mock banner must remain |
@@ -70,7 +76,9 @@ Every `{{SLOT}}` in the copied files must be replaced. Full slot table:
 - Slots in **capacitor.config.json**: produce the value via JSON serialization (e.g. load the template as JSON, set fields, dump) — never string-splice into JSON.
 - `{{BG_HEX}}`: validate it matches `^#[0-9a-fA-F]{6}$` before substitution; reject anything else.
 
-After filling: `grep -rn "{{" <target>/` must return nothing.
+**Icon system.** No emoji anywhere in the shell. Icons are inline SVG via a fixed `<symbol>`/`<use>` sprite at the top of `index.html` — single stroke style, `currentColor` (so theming flows through tokens), sized in CSS. The sprite is template structure; only icon *choices* are slots. Available names: `droplet, bolt, sparkle, cup, waves, sunrise, monitor, moon, bell, leaf, target, chart, star, check, x, chevron-left, clock, heart, trophy, calendar`. Structural icons (`chevron-left` back, `x` close, `star` rating, `check` features, `bell` notify) are fixed, not slots. An icon-name slot must match a sprite symbol exactly — verify with the check below.
+
+After filling: `grep -rn "{{" <target>/` must return nothing, and every `<use href="#i-…">` in the filled index.html must reference an existing `<symbol id>` (grep both lists and diff — a typo'd icon name renders as blank, not an error).
 
 **Truthfulness invariants (survive all filling and theming):** the proof screen's `Example review` tags, the `Loved by [N] users — example figure` count line, the paywall's example-offer banner, and the `$--.--` placeholder prices stay exactly as templated. Restore Purchases is an explicitly inert mock — tapping it shows the template's toast ("Restore is wired up by the payments skill…") and navigates nowhere. Nothing this skill outputs may be shippable as false social proof or invented prices/offers.
 
@@ -92,8 +100,8 @@ Preview serving: `file://` is acceptable for all executable checks below; to han
 
 Walkthrough at TWO dimensions — compact (320×568) and large (430×932). Run these as actual checks (console/computed values, not eyeballing) and report per-check results:
 
-4. Structure invariant: 7 `section.screen` with canonical `data-screen` values; 5 quiz steps × 3 options; 3 testimonial cards; 4 paywall features; fixed CTA labels verbatim (`Get Started`, `Continue`, `Enable Reminders`, `Maybe Later`, `Start My Free Trial`, `Restore Purchases`).
-5. Every path reaches home: quiz (back chevron appears on Q2+, decrements correctly), building auto-advance, both notify buttons, paywall CTA and ✕. **Include Restore in the walkthrough:** tap it on the paywall — the toast appears, no navigation occurs.
+4. Structure invariant: 8 `section.screen` with canonical `data-screen` values (`welcome, quiz, affirm, building, proof, notify, paywall, home`); 7 quiz steps × 4 options; 3 testimonial cards; 4 paywall features; fixed CTA labels verbatim (`Get Started`, `Continue`, `Enable Reminders`, `Maybe Later`, `Start My Free Trial`, `Restore Purchases`).
+5. Every path reaches home: quiz is SELECT + CONTINUE — tapping an option selects it (visual + `aria-pressed`, changeable until Continue), the quiz Continue button is disabled until the current question has a selection and advances on tap; back chevron appears on Q2+ and decrements correctly (Continue re-syncs to that question's stored selection); affirm advances on its Continue; building auto-advance; both notify buttons; paywall CTA and ✕. The notify and proof screens keep their own interactions exactly as specified — select+continue applies to quiz questions ONLY. **Include Restore in the walkthrough:** tap it on the paywall — the toast appears, no navigation occurs.
 6. Touch targets: **per screen, while that screen is `.active`** (hidden screens measure 0×0), every visible `button`'s bounding box ≥ 44px in both dimensions; report the smallest found per screen. A screen with no buttons (home) passes vacuously — report it as `no-buttons`, not a failure.
 7. Inputs (if any) computed `font-size` ≥ 16px.
 8. No horizontal scroll at either dimension (`scrollWidth <= clientWidth` on the scrolling element and `#screen`).
@@ -103,7 +111,7 @@ Walkthrough at TWO dimensions — compact (320×568) and large (430×932). Run t
 12. Color audit: scan `www/` for `#hex`, `rgb(`, `hsl(`, CSS named colors, and inline `style=` color declarations outside the `:root` token block. The invariant is ZERO raw colors below the token block — every color in the template is a token, so any hit is a violation.
 13. Accessibility invariants, executed not assumed:
     - After each screen transition, `document.activeElement` is the new screen's heading.
-    - `.progress-track` exposes `role="progressbar"` and `aria-valuenow` equals the answered count after each quiz tap.
+    - `.progress-track` exposes `role="progressbar"` with `aria-valuemax="14"`, and `aria-valuenow` tracks the current step on every screen change (1 on welcome, 1+q on quiz steps, 9 affirm, 10 building, 11 proof, 12 notify, 13 paywall, 14 home) with the fill width matching `valuenow/14`.
     - A `:focus-visible` rule exists and renders (focus a button via keyboard, confirm the outline — including on a heading: the suppression rule is `:not(:focus-visible)`-scoped, so keyboard focus must still show a ring).
     - Price options: the wrapper exposes `role="radiogroup"`, each price `role="radio"`, `aria-checked` flips on selection, roving tabindex holds (selected option `tabindex="0"`, others `-1` — one tab stop for the group), and Arrow keys (Left/Right/Up/Down) move both selection and focus between options.
     - Quiz options: `aria-pressed` is `true` on the selected option and restored selections re-expose it after reload.
