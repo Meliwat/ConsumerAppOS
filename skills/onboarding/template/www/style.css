@@ -1,0 +1,283 @@
+/* ============ onboarding shell — theme tokens ============
+   ALL look-and-feel flows through these tokens — including every color in
+   the file. Theming edits token values only; structure below the token
+   block never changes.
+   Contrast contract (verify when theming): --ink and --muted >= 4.5:1 on
+   --bg and --card; --on-accent >= 4.5:1 on BOTH ends of --grad;
+   --sel-border >= 3:1 on --bg (focus indicator). */
+:root {
+  --bg: #f1f2f4;
+  --card: #ffffff;
+  --ink: #17181c;
+  --muted: #57606c;               /* 4.9:1 on --bg, 5.6:1 on --card */
+  --accent: #1d4ed8;
+  --grad: linear-gradient(90deg, #0e7490 0%, #1d4ed8 100%);
+  --grad-start: #0e7490;          /* kept as tokens so contrast is checkable */
+  --grad-end: #1d4ed8;
+  --on-accent: #ffffff;           /* 5.3:1 on --grad-start, 6.6:1 on --grad-end */
+  --sel-bg: #dfe8f6;
+  --sel-border: #1d4ed8;
+  --star: #b45309;                /* decorative but kept readable */
+  --island: #000000;
+  --preview-bg: #d8dade;
+  --preview-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  --radius: 22px;
+  --shadow: 0 2px 10px rgba(20, 24, 40, 0.05);
+  --space: 8px;
+  --fs-body: 16px;
+  --fs-h1: 30px;
+  --fs-h2: 24px;
+  /* safe areas: fake status bar height in preview; native overrides below */
+  --safe-top: max(54px, calc(env(safe-area-inset-top, 0px) + 10px));
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--preview-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--fs-body);
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable] { user-select: text; -webkit-user-select: text; }
+button, input, select, textarea { font-family: inherit; font-size: var(--fs-body); }
+
+/* ============ desktop preview frame ============ */
+#device {
+  position: relative;
+  width: 402px; height: 874px; max-height: 100vh;
+  background: var(--bg); overflow: hidden;
+  border-radius: 44px; box-shadow: var(--preview-shadow);
+}
+@media (max-width: 500px), (max-height: 900px) {
+  body { background: var(--bg); }
+  #device {
+    width: 100vw;
+    height: 100vh;  /* fallback first: dvh is Safari 15.4+; Capacitor 8 supports iOS 15 */
+    height: 100dvh;
+    border-radius: 0; box-shadow: none;
+  }
+}
+
+#statusbar {
+  position: absolute; top: 0; left: 0; right: 0; height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 28px 0;
+  font-weight: 700; font-size: 16px;
+  z-index: 50; pointer-events: none;
+}
+#statusbar .icons { font-size: 13px; letter-spacing: -1px; }
+#statusbar .island {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+  width: 122px; height: 36px; border-radius: 20px; background: var(--island);
+}
+
+/* ============ native shell (Capacitor iOS) ============
+   Full-bleed: no frame chrome, real insets. This shell is PORTRAIT-FIRST;
+   left/right insets are still handled below so landscape/side insets are
+   safe regardless. Portrait lock itself (UISupportedInterfaceOrientations)
+   is a required output of the native-packaging skill. */
+html.native, html.native body {
+  height: 100%; min-height: 0;
+  position: fixed; inset: 0; overflow: hidden; width: 100%;
+  touch-action: manipulation;
+  /* progressive enhancement on iOS Safari (16+): rubber-band suppression
+     is NOT proven until device verification */
+  overscroll-behavior: none;
+}
+html.native #device {
+  width: 100%; height: 100%; min-height: 0;
+  border-radius: 0; box-shadow: none; max-height: none;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html.native #statusbar { display: none; } /* real iOS status bar takes over */
+
+/* ============ screen chrome ============ */
+#screen {
+  position: absolute; inset: 0;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.screen-inner { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; }
+
+/* Screen lifecycle: .enter (pre-transition state) -> .active; leaving screen
+   keeps rendering as .leaving for the transition, then is hidden by JS.
+   display:none cannot animate, so visibility is class-driven. */
+.screen {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column;
+  min-height: 0;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+.screen.active, .screen.leaving { display: flex; }
+.screen.active { opacity: 1; transform: translateX(0); z-index: 2; }
+.screen.enter { opacity: 0; transform: translateX(24px); }
+.screen.leaving { opacity: 0; transform: translateX(-24px); z-index: 1; }
+
+.screen-body {
+  flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column; gap: calc(var(--space) * 1.5);
+  /* safe-bottom on every body: content can reach the home indicator on
+     screens whose CTA sits inline or absent (quiz, building, home) */
+  padding: 16px 24px calc(16px + var(--safe-bottom));
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+.screen-body.center { justify-content: center; align-items: center; text-align: center; }
+
+h1 { font-size: var(--fs-h1); letter-spacing: -0.4px; }
+h2 { font-size: var(--fs-h2); letter-spacing: -0.3px; }
+/* Headings are programmatic focus targets on screen change. Suppress the
+   ring for programmatic/tap focus only — :focus-visible must still show. */
+h1:focus:not(:focus-visible), h2:focus:not(:focus-visible) { outline: none; }
+:focus-visible { outline: 3px solid var(--sel-border); outline-offset: 2px; border-radius: 6px; }
+
+.promise { color: var(--muted); max-width: 300px; line-height: 1.45; }
+.hero-glyph { font-size: 64px; }
+
+/* ============ progress ============ */
+.progress-track {
+  height: 4px; margin: 10px 24px 0; border-radius: 2px;
+  background: var(--sel-bg); overflow: hidden; flex: none;
+}
+.progress-fill {
+  height: 100%; width: 0; background: var(--grad);
+  transition: width 200ms ease;
+}
+
+/* ============ buttons ============ */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 20px;
+  border: 2px solid transparent; border-radius: var(--radius);
+  background: var(--card); color: var(--ink);
+  box-shadow: var(--shadow); cursor: pointer;
+  transition: transform 120ms ease;
+}
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--grad); color: var(--on-accent); font-weight: 700; }
+.btn.ghost { background: transparent; box-shadow: none; color: var(--muted); }
+.btn.link { background: transparent; box-shadow: none; color: var(--muted); min-height: 44px; text-decoration: underline; font-size: 14px; }
+.btn.option { justify-content: flex-start; text-align: left; }
+.btn.option.selected { background: var(--sel-bg); border-color: var(--sel-border); }
+.opt-icon { font-size: 22px; }
+
+.back-btn, .close-btn {
+  position: absolute; top: 6px; z-index: 5;
+  width: 44px; height: 44px; border: 0; border-radius: 22px;
+  background: var(--card); color: var(--ink); box-shadow: var(--shadow);
+  font-size: 22px; cursor: pointer;
+}
+.back-btn { left: 16px; }
+.close-btn { right: 16px; }
+
+.cta-bar {
+  flex: none;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 24px calc(16px + var(--safe-bottom));
+}
+
+/* ============ quiz steps ============ */
+.quiz-step {
+  display: none; flex: 1 1 auto; min-height: 0; flex-direction: column;
+  transition: opacity 200ms ease;
+}
+.quiz-step.active, .quiz-step.leaving { display: flex; }
+.quiz-step.active { opacity: 1; }
+.quiz-step.enter, .quiz-step.leaving { opacity: 0; }
+.quiz-step.leaving { position: absolute; inset: 0; }
+.quiz-step .screen-body { padding-top: 56px; } /* clears the back chevron */
+
+/* ============ building ============ */
+.build-anim, .plan-reveal { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.plan-reveal[hidden], .build-anim[hidden] { display: none; }
+.ring {
+  --pct: 0;
+  width: 150px; height: 150px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--pct) * 1%), var(--sel-bg) 0);
+  display: flex; align-items: center; justify-content: center;
+}
+.ring-pct {
+  width: 118px; height: 118px; border-radius: 50%;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 26px;
+}
+.build-caption { color: var(--muted); min-height: 1.5em; }
+
+/* ============ cards ============ */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px;
+}
+.plan-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.plan-label { color: var(--muted); font-size: 14px; }
+.plan-value { font-weight: 700; }
+
+.stars { font-size: 28px; color: var(--star); letter-spacing: 4px; }
+.count-line { color: var(--muted); font-size: 14px; }
+.testimonial p { line-height: 1.45; margin-top: 6px; }
+.mock-tag {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); background: var(--sel-bg);
+  border-radius: 8px; padding: 2px 8px;
+}
+.mock-banner {
+  text-align: center; font-size: 12.5px; font-weight: 650;
+  color: var(--muted); background: var(--sel-bg);
+  border-radius: 10px; padding: 8px 12px;
+}
+
+/* ============ paywall ============ */
+.features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.features li::before { content: "✓  "; color: var(--accent); font-weight: 800; }
+.price-group { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+.btn.price { justify-content: space-between; position: relative; }
+.btn.price.selected { background: var(--sel-bg); border-color: var(--sel-border); }
+.price-badge {
+  position: absolute; top: -10px; right: 14px;
+  background: var(--grad); color: var(--on-accent);
+  font-size: 11px; font-weight: 700;
+  border-radius: 9px; padding: 3px 9px;
+}
+.price-name { font-weight: 700; }
+.price-amt { color: var(--muted); }
+
+.empty-state { color: var(--muted); text-align: center; margin-top: 24px; }
+
+/* ============ toast ============
+   Always in the DOM (aria-live regions announce only when text changes in
+   an existing region); shown/hidden via class, never [hidden]. */
+#toast {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(24px + var(--safe-bottom));
+  background: var(--ink); color: var(--bg);
+  border-radius: 14px; padding: 10px 16px;
+  font-size: 14px; max-width: 85%;
+  z-index: 60;
+  opacity: 0; pointer-events: none;
+  transition: opacity 200ms ease;
+}
+#toast.show { opacity: 1; }
+
+/* ============ reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  .screen, .quiz-step, .progress-fill, .btn, #toast { transition: none; }
+  .screen.enter, .screen.leaving { transform: none; }
+}

@@ -4,3 +4,4 @@ AuthKey_*.p8
 
 # OS noise
 .DS_Store
+.gstack/

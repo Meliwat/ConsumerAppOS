@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{APP_NAME}}</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="device">
+    <div id="statusbar">
+      <span>9:41</span>
+      <div class="island"></div>
+      <span class="icons">▮▮▮▮ ⌁ ▐95▌</span>
+    </div>
+    <div id="screen">
+      <div class="progress-track" role="progressbar" aria-label="Onboarding progress"
+           aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" hidden>
+        <div class="progress-fill"></div>
+      </div>
+
+      <main class="screen-inner">
+
+        <!-- 1 · welcome -->
+        <section class="screen active" data-screen="welcome">
+          <div class="screen-body center">
+            <div class="hero-glyph" aria-hidden="true">{{HERO_GLYPH}}</div>
+            <h1 tabindex="-1">{{APP_NAME}}</h1>
+            <p class="promise">{{PROMISE_LINE}}</p>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="welcome-next">Get Started</button>
+          </div>
+        </section>
+
+        <!-- 2 · quiz (5 questions × 3 options, one step visible at a time) -->
+        <section class="screen" data-screen="quiz">
+          <button class="back-btn" data-action="quiz-back" aria-label="Previous question" hidden>‹</button>
+
+          <div class="quiz-step active" data-q="1">
+            <div class="screen-body">
+              <h2 tabindex="-1">{{Q1_TEXT}}</h2>
+              <button class="btn option" aria-pressed="false" data-q="1" data-opt="1"><span class="opt-icon" aria-hidden="true">{{Q1_OPT1_ICON}}</span>{{Q1_OPT1_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="1" data-opt="2"><span class="opt-icon" aria-hidden="true">{{Q1_OPT2_ICON}}</span>{{Q1_OPT2_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="1" data-opt="3"><span class="opt-icon" aria-hidden="true">{{Q1_OPT3_ICON}}</span>{{Q1_OPT3_TEXT}}</button>
+            </div>
+          </div>
+          <div class="quiz-step" data-q="2">
+            <div class="screen-body">
+              <h2 tabindex="-1">{{Q2_TEXT}}</h2>
+              <button class="btn option" aria-pressed="false" data-q="2" data-opt="1"><span class="opt-icon" aria-hidden="true">{{Q2_OPT1_ICON}}</span>{{Q2_OPT1_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="2" data-opt="2"><span class="opt-icon" aria-hidden="true">{{Q2_OPT2_ICON}}</span>{{Q2_OPT2_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="2" data-opt="3"><span class="opt-icon" aria-hidden="true">{{Q2_OPT3_ICON}}</span>{{Q2_OPT3_TEXT}}</button>
+            </div>
+          </div>
+          <div class="quiz-step" data-q="3">
+            <div class="screen-body">
+              <h2 tabindex="-1">{{Q3_TEXT}}</h2>
+              <button class="btn option" aria-pressed="false" data-q="3" data-opt="1"><span class="opt-icon" aria-hidden="true">{{Q3_OPT1_ICON}}</span>{{Q3_OPT1_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="3" data-opt="2"><span class="opt-icon" aria-hidden="true">{{Q3_OPT2_ICON}}</span>{{Q3_OPT2_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="3" data-opt="3"><span class="opt-icon" aria-hidden="true">{{Q3_OPT3_ICON}}</span>{{Q3_OPT3_TEXT}}</button>
+            </div>
+          </div>
+          <div class="quiz-step" data-q="4">
+            <div class="screen-body">
+              <h2 tabindex="-1">{{Q4_TEXT}}</h2>
+              <button class="btn option" aria-pressed="false" data-q="4" data-opt="1"><span class="opt-icon" aria-hidden="true">{{Q4_OPT1_ICON}}</span>{{Q4_OPT1_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="4" data-opt="2"><span class="opt-icon" aria-hidden="true">{{Q4_OPT2_ICON}}</span>{{Q4_OPT2_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="4" data-opt="3"><span class="opt-icon" aria-hidden="true">{{Q4_OPT3_ICON}}</span>{{Q4_OPT3_TEXT}}</button>
+            </div>
+          </div>
+          <div class="quiz-step" data-q="5">
+            <div class="screen-body">
+              <h2 tabindex="-1">{{Q5_TEXT}}</h2>
+              <button class="btn option" aria-pressed="false" data-q="5" data-opt="1"><span class="opt-icon" aria-hidden="true">{{Q5_OPT1_ICON}}</span>{{Q5_OPT1_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="5" data-opt="2"><span class="opt-icon" aria-hidden="true">{{Q5_OPT2_ICON}}</span>{{Q5_OPT2_TEXT}}</button>
+              <button class="btn option" aria-pressed="false" data-q="5" data-opt="3"><span class="opt-icon" aria-hidden="true">{{Q5_OPT3_ICON}}</span>{{Q5_OPT3_TEXT}}</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3 · building your {{PLAN_NOUN}} -->
+        <section class="screen" data-screen="building">
+          <div class="build-anim">
+            <div class="screen-body center">
+              <h2 tabindex="-1">Building your {{PLAN_NOUN}}…</h2>
+              <div class="ring" aria-hidden="true"><span class="ring-pct">0%</span></div>
+              <p class="build-caption" aria-live="polite" data-c2="{{BUILD_CAPTION_2}}" data-c3="{{BUILD_CAPTION_3}}">{{BUILD_CAPTION_1}}</p>
+            </div>
+          </div>
+          <div class="plan-reveal" hidden>
+            <div class="screen-body">
+              <h2 tabindex="-1">Your {{PLAN_NOUN}} is ready</h2>
+              <div class="card plan-card">
+                <div class="plan-row"><span class="plan-label">Built around</span><span class="plan-value" data-plan="a1"></span></div>
+                <div class="plan-row"><span class="plan-label">Focused on</span><span class="plan-value" data-plan="a2"></span></div>
+              </div>
+            </div>
+            <div class="cta-bar">
+              <button class="btn primary" data-action="building-next">Continue</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 · social proof (MOCK: replace with real, verifiable testimonials before release) -->
+        <section class="screen" data-screen="proof">
+          <div class="screen-body">
+            <h2 tabindex="-1">People like it here</h2>
+            <div class="stars" aria-label="Five star rating illustration">★★★★★</div>
+            <p class="count-line">Loved by [N] users — example figure</p>
+            <div class="card testimonial"><span class="mock-tag">Example review</span><p>{{TESTIMONIAL_1}}</p></div>
+            <div class="card testimonial"><span class="mock-tag">Example review</span><p>{{TESTIMONIAL_2}}</p></div>
+            <div class="card testimonial"><span class="mock-tag">Example review</span><p>{{TESTIMONIAL_3}}</p></div>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="proof-next">Continue</button>
+          </div>
+        </section>
+
+        <!-- 5 · notification prime (soft ask only; no permission API — wired by a later skill) -->
+        <section class="screen" data-screen="notify">
+          <div class="screen-body center">
+            <div class="hero-glyph" aria-hidden="true">🔔</div>
+            <h2 tabindex="-1">Stay on track</h2>
+            <p class="promise">{{NOTIFY_BENEFIT}}</p>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="notify-yes">Enable Reminders</button>
+            <button class="btn ghost" data-action="notify-later">Maybe Later</button>
+          </div>
+        </section>
+
+        <!-- 6 · paywall
+             PAYWALL PLACEHOLDER: structure only; payments wired by a later skill.
+             MOCK PRICING: real prices come from the payments skill. -->
+        <section class="screen" data-screen="paywall">
+          <button class="close-btn" data-action="paywall-close" aria-label="Skip for now">✕</button>
+          <div class="screen-body">
+            <p class="mock-banner">Example offer — pricing is wired by the payments skill</p>
+            <h2 tabindex="-1">Unlock {{APP_NAME}}</h2>
+            <ul class="features">
+              <li>{{FEATURE_1}}</li>
+              <li>{{FEATURE_2}}</li>
+              <li>{{FEATURE_3}}</li>
+              <li>{{FEATURE_4}}</li>
+            </ul>
+            <div class="price-group" role="radiogroup" aria-label="Choose a plan">
+              <button class="btn price selected" role="radio" aria-checked="true" tabindex="0" data-price="yearly">
+                <span class="price-badge">{{TRIAL_DURATION}} free</span>
+                <span class="price-name">Yearly</span><span class="price-amt">$--.-- / year</span>
+              </button>
+              <button class="btn price" role="radio" aria-checked="false" tabindex="-1" data-price="monthly">
+                <span class="price-name">Monthly</span><span class="price-amt">$--.-- / month</span>
+              </button>
+            </div>
+          </div>
+          <div class="cta-bar">
+            <button class="btn primary" data-action="paywall-cta">Start My Free Trial</button>
+            <button class="btn link" data-action="paywall-restore">Restore Purchases</button>
+          </div>
+        </section>
+
+        <!-- 7 · home stub -->
+        <section class="screen" data-screen="home">
+          <div class="screen-body">
+            <h1 tabindex="-1">{{APP_NAME}}</h1>
+            <div class="card plan-card">
+              <div class="plan-row"><span class="plan-label">Your {{PLAN_NOUN}}</span><span class="plan-value" data-plan="a1"></span></div>
+              <div class="plan-row"><span class="plan-label">Focus</span><span class="plan-value" data-plan="a2"></span></div>
+            </div>
+            <p class="empty-state">{{EMPTY_STATE_LINE}}</p>
+          </div>
+        </section>
+
+      </main>
+      <!-- toast stays in the DOM permanently: live regions only announce
+           text changes inside an existing region, so no [hidden] toggling -->
+      <div id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    // Native shell detection (Capacitor): full-bleed, real safe areas, no fake status bar.
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      document.documentElement.classList.add("native");
+    }
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "appId": "{{APP_ID}}",
+  "appName": "{{APP_NAME}}",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "{{BG_HEX}}",
+    "zoomEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 900,
+      "backgroundColor": "{{BG_HEX}}",
+      "showSpinner": false
+    }
+  }
+}
